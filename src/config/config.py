@@ -1,3 +1,7 @@
+from dataclasses import dataclass, field
+from typing import Any
+
+
 DEFAULTS: dict[str, Any] = {
     "highscore_filename": "highscores.json",
     "lives": 3,
