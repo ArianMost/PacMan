@@ -52,9 +52,54 @@ class Entity:
     internal sub-cell progress value, so rendering can interpolate pixel
     position mid-move while all collision/AI logic reasons in whole cells.
     """
+    def __init__(
+        self,
+        col: int,
+        row: int,
+        speed_cells_per_sec: float = 4.0,
+        direction: Direction = Direction.NONE,
+        next_direction: Direction = Direction.NONE,
+    ):
+        self.col = col
+        self.row = row
+        self.speed_cells_per_sec = speed_cells_per_sec
+        self.direction = direction
+        self.next_direction = next_direction
+        self._progress = 0.0
+    # how far the entity has moved from its current cell toward the next cell.
 
-    col: int
-    row: int
-    speed_cells_per_sec: float = 4.0
-    direction: Direction = Direction.NONE
-    next_direction: Direction = Direction.NONE
+    def snap(self, col: int, row: int) -> None:
+        """Teleport to an exact cell and clear all movement state.
+        Used for spawning, respawning, and level (re)start.
+        This is a method that moves the entity
+        immediately to a specific grid cell.
+        """
+        self.col = col
+        self.row = row
+        self._progress = 0.0
+        self.direction = Direction.NONE
+        self.next_direction = Direction.NONE
+
+    def pixel_position(self, cell_size: int) -> tuple[float, float]:
+        """
+        calculates where the entity should actually be drawn on the screen.
+        """
+        x = (self.col + self.direction.dx * self._progress) * cell_size
+        y = (self.row + self.direction.dy * self._progress) * cell_size
+        return x, y
+
+    def can_move(self, maze: "Maze", direction: Direction) -> bool:
+        if direction is Direction.NONE:
+            return False
+
+        x = self.col
+        y = self.row
+        if direction is Direction.UP:
+            wall = 1
+        elif direction is Direction.RIGHT:
+            wall = 2
+        elif direction is Direction.DOWN:
+            wall = 4
+        else:  # LEFT
+            wall = 8
+        return (maze.maze[y][x] & wall) == 0
