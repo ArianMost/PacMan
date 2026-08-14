@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
-DEFAULTS: dict[str, Any] = {
+DEFAULT_CONFIG: dict[str, Any] = {
     "highscore_filename": "highscores.json",
     "lives": 3,
     "pacgum": 42,
@@ -34,13 +34,13 @@ class LevelConfig:
 
 @dataclass
 class Config:
-    highscore_filename: str = DEFAULTS["highscore_filename"]
-    lives: int = DEFAULTS["lives"]
-    pacgum: int = DEFAULTS["pacgum"]
-    points_per_pacgum: int = DEFAULTS["points_per_pacgum"]
-    points_per_super_pacgum: int = DEFAULTS["points_per_super_pacgum"]
-    points_per_ghost: int = DEFAULTS["points_per_ghost"]
-    seed: int = DEFAULTS["seed"]
-    level_max_time: int = DEFAULTS["level_max_time"]
-    cell_size: int = DEFAULTS["cell_size"]
+    highscore_filename: str = DEFAULT_CONFIG["highscore_filename"]
+    lives: int = DEFAULT_CONFIG["lives"]
+    pacgum: int = DEFAULT_CONFIG["pacgum"]
+    points_per_pacgum: int = DEFAULT_CONFIG["points_per_pacgum"]
+    points_per_super_pacgum: int = DEFAULT_CONFIG["points_per_super_pacgum"]
+    points_per_ghost: int = DEFAULT_CONFIG["points_per_ghost"]
+    seed: int = DEFAULT_CONFIG["seed"]
+    level_max_time: int = DEFAULT_CONFIG["level_max_time"]
+    cell_size: int = DEFAULT_CONFIG["cell_size"]
     levels: list[LevelConfig] = field(default_factory=list)
