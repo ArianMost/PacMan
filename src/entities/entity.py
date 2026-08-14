@@ -103,3 +103,11 @@ class Entity:
         else:  # LEFT
             wall = 8
         return (maze.maze[y][x] & wall) == 0
+
+    def available_directions(self, maze: Any) -> list[Direction]:
+        """Return all cardinal directions that are not blocked by a wall."""
+        return [d for d in _CARDINALS if self.can_move(maze, d)]
+
+    def update(self, maze: Any, dt: float, speed_multiplier: float = 1.0) -> None:
+        """Update entity position and movement state based on elapsed time and speed."""
+        pass
