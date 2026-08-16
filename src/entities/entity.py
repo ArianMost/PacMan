@@ -87,6 +87,16 @@ class Entity:
         x = (self.col + self.direction.dx * self._progress) * cell_size
         y = (self.row + self.direction.dy * self._progress) * cell_size
         return x, y
+    
+    def _squared_distance(self, dir: Direction, target: "Cell") -> float:
+        """
+        A heuristic used by ghosts to determine which direction is "closest" to the target.
+        It calculates the squared Euclidean distance between the cell in `dir` and the `target` cell.
+        Squaring the distance avoids the need for a costly square root operation, making the comparison faster.
+        """
+        x1 = self.col + dir.dx
+        y1 = self.row + dir.dy
+        return (x1 - target.col) ** 2 + (y1 - target.row) ** 2
 
     def can_move(self, maze: "Maze", direction: Direction) -> bool:
         if direction is Direction.NONE:
@@ -103,3 +113,7 @@ class Entity:
         else:  # LEFT
             wall = 8
         return (maze.maze[y][x] & wall) == 0
+
+    def available_directions(self, maze: "Maze") -> list[Direction] | None:
+        """All cardinal directions the entity could legally step into right now."""
+        return [d for d in _CARDINALS if self.can_move(maze, d)]
