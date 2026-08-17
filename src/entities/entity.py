@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Tuple, Any
 
 
 class Direction(Enum):
@@ -45,13 +44,10 @@ _CARDINALS: tuple[Direction, ...] = (
     Direction.RIGHT,
 )
 
+Cell = tuple[int, int]
 
 class Entity:
-    """A grid-aligned actor that can move smoothly through a `Maze`.
-    Position is tracked as an exact grid cell (`col`, `row`) plus an
-    internal sub-cell progress value, so rendering can interpolate pixel
-    position mid-move while all collision/AI logic reasons in whole cells.
-    """
+    """A game entity that moves through the maze one cell at a time."""
     def __init__(
         self,
         col: int,
@@ -59,7 +55,8 @@ class Entity:
         speed_cells_per_sec: float = 4.0,
         direction: Direction = Direction.NONE,
         next_direction: Direction = Direction.NONE,
-    ):
+    ) -> None:
+        """Create an entity at the given maze cell and set its movement."""
         self.col = col
         self.row = row
         self.speed_cells_per_sec = speed_cells_per_sec
@@ -69,11 +66,7 @@ class Entity:
     # how far the entity has moved from its current cell toward the next cell.
 
     def snap(self, col: int, row: int) -> None:
-        """Teleport to an exact cell and clear all movement state.
-        Used for spawning, respawning, and level (re)start.
-        This is a method that moves the entity
-        immediately to a specific grid cell.
-        """
+        """Move the entity immediately to a cell and stop its movement."""
         self.col = col
         self.row = row
         self._progress = 0.0
@@ -87,18 +80,12 @@ class Entity:
         x = (self.col + self.direction.dx * self._progress) * cell_size
         y = (self.row + self.direction.dy * self._progress) * cell_size
         return x, y
-    
-    def _squared_distance(self, dir: Direction, target: "Cell") -> float:
-        """
-        A heuristic used by ghosts to determine which direction is "closest" to the target.
-        It calculates the squared Euclidean distance between the cell in `dir` and the `target` cell.
-        Squaring the distance avoids the need for a costly square root operation, making the comparison faster.
-        """
-        x1 = self.col + dir.dx
-        y1 = self.row + dir.dy
-        return (x1 - target.col) ** 2 + (y1 - target.row) ** 2
 
     def can_move(self, maze: "Maze", direction: Direction) -> bool:
+        """Check whether the entity can legally move in a given direction.
+        Checks the wall bitmask of the entity's current grid cell in `maze`
+        to determine if passage in `direction` is unobstructed.
+        """
         if direction is Direction.NONE:
             return False
 
@@ -114,6 +101,30 @@ class Entity:
             wall = 8
         return (maze.maze[y][x] & wall) == 0
 
-    def available_directions(self, maze: "Maze") -> list[Direction] | None:
-        """All cardinal directions the entity could legally step into right now."""
+    def available_directions(self, maze: "Maze") -> list[Direction]:
+        """Return all directions that are currently open in the maze."""
         return [d for d in _CARDINALS if self.can_move(maze, d)]
+
+    def update(self, maze: "Maze", dt: float, speed_multiplier: float = 1.0) -> None:
+        """Move the entity based on its speed, direction, and the maze walls."""
+        if self.direction is Direction.NONE and self.next_direction is not Direction.NONE:
+            if self.can_move(maze, self.next_direction):
+                self.direction = self.next_direction
+
+        if self.direction is Direction.NONE:
+            return
+        self._progress += self.speed_cells_per_sec * speed_multiplier * dt
+
+        while self._progress >= 1.0:
+            self._progress -= 1.0
+            self.col += self.direction.dx
+            self.row += self.direction.dy
+            if self.next_direction is not Direction.NONE and (
+                self.next_direction is not self.direction
+            ):
+                if self.can_move(maze, self.next_direction):
+                    self.direction = self.next_direction
+            if not self.can_move(maze, self.direction):
+                self.direction = Direction.NONE
+                self._progress = 0.0
+                break
