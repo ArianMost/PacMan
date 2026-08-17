@@ -2,7 +2,30 @@ import json
 from pathlib import Path
 import sys
 from typing import Any
-from config import DEFAULT_CONFIG, Config
+from config import DEFAULT_CONFIG, Config, LevelConfig
+
+def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
+    levels: list[LevelConfig] = []
+    if not isinstance(raw_levels, list) or not raw_levels:
+        print(f"[config] warning: invalid or missing level, using defaults", file=sys.stderr)
+        raw_levels = DEFAULT_CONFIG["level"]
+
+    for i, data in enumerate(raw_levels):
+        if not isinstance(data, dict):
+            print(f"[config] warning: level[{i}] is not valid!", file=sys.stderr)
+            continue
+        height = _validate_positive_int(data.get("height"), 8, f"level[{i}].height")
+        width = _validate_positive_int(data.get("width"), 10, f"level[{i}].width")
+        height = max(5, min(height, 30))
+        width = max(5, min(width, 40))
+        levels.append(LevelConfig(width=width, height=height))
+
+    if not levels:
+        levels = []
+        for level in DEFAULT_CONFIG["level"]:
+            levels.append(LevelConfig(**level))
+
+    return levels
 
 def load_config(config_file: str) -> Config:
     config_text = ""
