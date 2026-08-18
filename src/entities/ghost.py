@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Tuple, Any
 from typing import ClassVar, TYPE_CHECKING
-from entity import Entity
+from entities.entity import Entity
 from entities.entity import Direction
 import random
 
@@ -25,7 +25,7 @@ class Ghost(Entity):
         self.respawn_timer: float = 0.0
 
     _CHASE_SPEED_MULT: ClassVar[float] = 1.0
-    _FRIGHТENED_SPEED_MULT: ClassVar[float] = 0.5
+    _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.5
     _EATEN_SPEED_MULT: ClassVar[float] = 1.8
 
     def set_home(self, col: int, row: int) -> None:
