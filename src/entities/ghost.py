@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Tuple, Any
+from typing import ClassVar, TYPE_CHECKING
 from entity import Entity
 from entities.entity import Direction
 import random
@@ -13,11 +14,6 @@ class GhostState(Enum):
 
 Cell = tuple[int, int]
 
-
-_CHASE_SPEED_MULT: ClassVar[float] = 1.0
-_FRIGHТENED_SPEED_MULT: ClassVar[float] = 0.5
-_EATEN_SPEED_MULT: ClassVar[float] = 1.8
-
 class Ghost(Entity):
     def __init__(self, name: str, color: Tuple[int, int, int]) -> None:
         self.name: str = name
@@ -27,6 +23,10 @@ class Ghost(Entity):
         self.state: GhostState = GhostState.CHASE
         self.frightened_timer: float = 0.0
         self.respawn_timer: float = 0.0
+
+    _CHASE_SPEED_MULT: ClassVar[float] = 1.0
+    _FRIGHТENED_SPEED_MULT: ClassVar[float] = 0.5
+    _EATEN_SPEED_MULT: ClassVar[float] = 1.8
 
     def set_home(self, col: int, row: int) -> None:
         """Assign (or reassign) this ghost's home/respawn corner."""

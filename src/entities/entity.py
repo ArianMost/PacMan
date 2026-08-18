@@ -53,6 +53,7 @@ class Entity:
         col: int,
         row: int,
         speed_cells_per_sec: float = 4.0,
+
         direction: Direction = Direction.NONE,
         next_direction: Direction = Direction.NONE,
     ) -> None:
