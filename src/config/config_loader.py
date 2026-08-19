@@ -2,8 +2,66 @@ import json
 from pathlib import Path
 import sys
 from typing import Any
-from config import DEFAULT_CONFIG, Config, LevelConfig
+from .config import DEFAULT_CONFIG, Config, LevelConfig
 
+def _remove_comments(text: str):
+    """Remove #, // line comments and /* */ block comments.
+    Comments are only stripped when they are not inside a JSON string,
+    so that URLs or text values containing ``//`` are left untouched.
+    """
+    chars = iter(text)
+    res: list[str] = []
+    in_json_str = False
+    is_escape = False
+
+    for char in chars:
+        if in_json_str:
+            res.append(char)
+
+            if is_escape:
+                is_escape = False
+            elif char == "\\":
+                is_escape = True
+            elif char == '"':
+                in_json_str = False
+            continue
+
+        if char == '"':
+            in_json_str = True
+            res.append(char)
+
+        elif char == "#":
+            for char in chars:
+                if char == "\n":
+                    res.append(char)
+                    break
+
+        elif char == "/":
+            try:
+                next_char = next(chars)
+            except StopIteration:
+                res.append(char)
+                break
+
+            if next_char == "/":
+                for char in chars:
+                    if char == "\n":
+                        res.append(char)
+                        break
+            elif next_char == "*":
+                previous = ""
+                for char in chars:
+                    if previous == "*" and char == "/":
+                        break
+                    previous = char
+            else:
+                res.extend((char, next_char))
+
+        else:
+            res.append(char)
+
+    cleaned_text = "".join(res)
+    return cleaned_text
 
 def _validate_positive_int(val: str, default_val: int, label: str):
     try:
@@ -104,4 +162,17 @@ def load_config(config_file: str) -> Config:
     )
     cell_size = _validate_positive_int(
         config_data.get("cell_size"), DEFAULT_CONFIG["cell_size"], "cell_size"
+    )
+
+    return Config(
+        highscore,
+        levels,
+        lives,
+        pacgum,
+        points_per_pacgum,
+        points_per_super_pacgum,
+        points_per_ghost,
+        seed,
+        level_max_time,
+        cell_size
     )
