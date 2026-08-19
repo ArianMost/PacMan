@@ -4,6 +4,27 @@ import sys
 from typing import Any
 from config import DEFAULT_CONFIG, Config, LevelConfig
 
+
+def _validate_positive_int(val: str, default_val: int, label: str):
+    try:
+        num = int(val)
+        if num <= 0:
+            raise ValueError
+        return num
+    except (TypeError, ValueError):
+        print(f"[config] warning: invalid '{label} : {val}', using the default value '{default_val}'", file=sys.stderr)
+
+
+def _validate_nonnegative_int(val: str, default_val: int, label: str):
+    try:
+        num = int(val)
+        if num < 0:
+            raise ValueError
+        return num
+    except (TypeError, ValueError):
+        print(f"[config] warning: invalid '{label} : {val}', using the default value '{default_val}'", file=sys.stderr)
+
+
 def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
     levels: list[LevelConfig] = []
     if not isinstance(raw_levels, list) or not raw_levels:
