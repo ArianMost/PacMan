@@ -2,6 +2,8 @@ class Player:
     def __init__(self, lives: int, score: int = 0) -> None:
         self.lives = lives
         self.score = score
+        self.col: int = 0
+        self.row: int = 0
 
     def add_score(self, points: int) -> None:
         self.score += points
