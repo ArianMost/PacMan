@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Tuple, Any
 from typing import ClassVar, TYPE_CHECKING
-from entities.entity import Entity
+from entity import Entity
 from entities.entity import Direction
 import random
+from src.maze.maze_adapter import Maze
 
 
 class GhostState(Enum):
@@ -25,7 +26,7 @@ class Ghost(Entity):
         self.respawn_timer: float = 0.0
 
     _CHASE_SPEED_MULT: ClassVar[float] = 1.0
-    _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.5
+    _FRIGHТENED_SPEED_MULT: ClassVar[float] = 0.5
     _EATEN_SPEED_MULT: ClassVar[float] = 1.8
 
     def set_home(self, col: int, row: int) -> None:
@@ -53,7 +54,7 @@ class Ghost(Entity):
         self.respawn_timer = respawn_delay
         self.frightened_timer = 0.0
 
-    def choose_direction(self, maze: "Maze", target: Cell) -> None:
+    def choose_direction(self, maze: Maze, target: Cell) -> None:
         """Pick `next_direction` given the current target cell and state.
  
         Ghosts never reverse into the cell they just came from unless
@@ -113,7 +114,7 @@ class Ghost(Entity):
             return pcol, prow
         return pcol, prow  # blinky and default
 
-    def _update_eaten(self, maze: "Maze", dt: float) -> None:
+    def _update_eaten(self, maze: Maze, dt: float) -> None:
         self.respawn_timer = max(0.0, self.respawn_timer - dt)
         home = (self.home_col, self.home_row)
         self.choose_direction(maze, home)
@@ -122,19 +123,19 @@ class Ghost(Entity):
             self.snap(self.home_col, self.home_row)
             self.state = GhostState.CHASE
 
-    def _update_frightened(self, maze: "Maze", dt: float, player_cell: Cell) -> None:
+    def _update_frightened(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         self.frightened_timer = max(0.0, self.frightened_timer - dt)
         self.choose_direction(maze, player_cell)
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
             self.state = GhostState.CHASE
  
-    def _update_chase(self, maze: "Maze", dt: float, player_cell: Cell) -> None:
+    def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         target = self._chase_target(player_cell)
         self.choose_direction(maze, target)
         self.update(maze, dt, speed_multiplier=self._CHASE_SPEED_MULT)
 
-    def update_ai(self, maze: "Maze", dt: float, player_cell: Cell) -> None:
+    def update_ai(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Advance AI + movement by `dt` seconds. Call once per frame.
  
         Dispatches on `state`:
