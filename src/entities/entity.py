@@ -1,4 +1,5 @@
 from enum import Enum
+from src.maze.maze_adapter import Maze
 
 
 class Direction(Enum):
@@ -82,7 +83,7 @@ class Entity:
         y = (self.row + self.direction.dy * self._progress) * cell_size
         return x, y
 
-    def can_move(self, maze: "Maze", direction: Direction) -> bool:
+    def can_move(self, maze: Maze, direction: Direction) -> bool:
         """Check whether the entity can legally move in a given direction.
         Checks the wall bitmask of the entity's current grid cell in `maze`
         to determine if passage in `direction` is unobstructed.
@@ -102,11 +103,11 @@ class Entity:
             wall = 8
         return (maze.maze[y][x] & wall) == 0
 
-    def available_directions(self, maze: "Maze") -> list[Direction]:
+    def available_directions(self, maze: Maze) -> list[Direction]:
         """Return all directions that are currently open in the maze."""
         return [d for d in _CARDINALS if self.can_move(maze, d)]
 
-    def update(self, maze: "Maze", dt: float, speed_multiplier: float = 1.0) -> None:
+    def update(self, maze: Maze, dt: float, speed_multiplier: float = 1.0) -> None:
         """Move the entity based on its speed, direction, and the maze walls."""
         if self.direction is Direction.NONE and self.next_direction is not Direction.NONE:
             if self.can_move(maze, self.next_direction):
