@@ -15,6 +15,9 @@ class GameState:
         self.pellets = PelletField(set(), set())
         self.ghosts: List[Ghost] = []
         self.maze: Maze = Maze()
+        self.current_level_index: int = 0
+        self.fruit_cell: tuple | None = None
+        self.fruit_timer: float = 0.0
 
     def update(self, dt: float) -> None:
         """Update the game for one frame."""
@@ -29,6 +32,12 @@ class GameState:
 
             for ghost in self.ghosts:
                 ghost.frighten(duration=5.0)
+
+        if self.fruit_cell is not None:
+            if player_cell == self.fruit_cell:
+                display_level = self.current_level_index + 1
+                self.scoring.award_fruit(self.player, display_level)
+                self.fruit_cell = None
 
         for ghost in self.ghosts:
             ghost.update_ai(

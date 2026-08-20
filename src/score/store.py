@@ -1,12 +1,6 @@
 from typing import List, Any
 from entities.player import Player
-
-class LevelConfig:
-    """Represents the configuration for a single level."""
-
-    def __init__(self, width: int, height: int) -> None:
-        self.width = width
-        self.height = height
+from config.config import LevelConfig
 
 class GameConfig:
     """
@@ -105,3 +99,30 @@ class ScoringSystem:
     def reset_ghost_chain(self) -> None:
         """Reset the combo, e.g. when the frightened period expires."""
         self._ghost_chain = 0
+
+    def award_fruit(self, player: Player, level: int) -> int:
+        """
+        Award points for eating the bonus fruit.
+        The point value depends on the current level number.
+        Args:
+            player (Player): The player entity to award points to.
+            level (int): The current level (1 through 10).
+        Returns:
+            int: The number of points awarded.
+        """
+        if level == 1:
+            points = 100       # Cherry
+        elif level == 2:
+            points = 300       # Strawberry
+        elif 3 <= level <= 4:
+            points = 500       # Orange
+        elif 5 <= level <= 6:
+            points = 700       # Apple
+        elif 7 <= level <= 8:
+            points = 1000      # Melon
+        elif 9 <= level <= 10:
+            points = 2000      # Galaxian Flagship
+        else:
+            points = 0         # Fallback if level is somehow out of bounds
+        player.add_score(points)
+        return points
