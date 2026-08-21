@@ -4,7 +4,7 @@ from typing import ClassVar, TYPE_CHECKING
 from entity import Entity
 from entities.entity import Direction
 import random
-from src.maze.maze_adapter import Maze
+from src.maze.maze import Maze
 
 
 class GhostState(Enum):
