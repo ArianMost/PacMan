@@ -1,4 +1,3 @@
-from config.loader import GameConfig
 from entities.player import Player
 from score.store import ScoringSystem
 from entities.ghost import GhostState
@@ -6,9 +5,10 @@ from entities.ghost import Ghost
 from typing import List
 from entities.palletfield import PelletField
 from .maze import Maze
+from config.config import Config
 
 class GameState:
-    def __init__(self, config: GameConfig) -> None:
+    def __init__(self, config: Config) -> None:
         self.config = config
         self.player = Player(config.lives)
         self.scoring = ScoringSystem(config)
