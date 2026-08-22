@@ -160,3 +160,26 @@ class HighscoreStore:
         if count <= 0:
             return []
         return self.entries[:count]
+
+    def save(self) -> None:
+        """Persist the current entries to `filename`.
+ 
+        Call at game end (after a possible `add()`). Writes to a
+        temporary file and swaps it into place atomically, so a crash
+        mid-write can never corrupt an existing, valid highscore file.
+        Any I/O failure is logged, never raised.
+        """
+        path = Path(self.filename)
+        payload = [{"name": e.name, "score": e.score} for e in self.entries]
+ 
+        try:
+            tmp_path = path.with_suffix(path.suffix + ".tmp")
+            tmp_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            tmp_path.replace(path)
+        except OSError as exc:
+            print(
+                f"[highscore] warning: could not save '{self.filename}' "
+                f"({exc}); highscores from this session were not saved",
+                file=sys.stderr,
+            )
+ 
