@@ -29,7 +29,6 @@ class HighscoreStore:
         entries: list[HighscoreEntry] | None = None
     ) -> None:
         self.filename = filename
-
         if entries is None:
             self.entries = []
         else:
@@ -127,3 +126,37 @@ class HighscoreStore:
         ]
         parsed.sort(key=lambda e: e.score, reverse=True)
         self.entries = parsed[:MAX_ENTRIES]
+
+    def add(self, name: str, score: int) -> bool:
+        """Validate and insert a new entry, then re-rank and trim to top N.
+        """
+        clean_name = self._validate_name(name)
+        if clean_name is None:
+            print(
+                f"[highscore] warning: rejected name {name!r} "
+                f"(must be 1-{MAX_NAME_LENGTH} alphanumeric/space characters)",
+                file=sys.stderr,
+            )
+            return False
+ 
+        clean_score = self._validate_score(score)
+        if clean_score is None:
+            print(
+                f"[highscore] warning: rejected score {score!r} "
+                f"(must be a non-negative integer)",
+                file=sys.stderr,
+            )
+            return False
+ 
+        entry = HighscoreEntry(name=clean_name, score=clean_score)
+        self.entries.append(entry)
+        self.entries.sort(key=lambda e: e.score, reverse=True)
+        made_top = self.entries.index(entry) < MAX_ENTRIES
+        self.entries = self.entries[:MAX_ENTRIES]
+        return made_top
+ 
+    def top(self, count: int = MAX_ENTRIES) -> list[HighscoreEntry]:
+        """Return the top `count` entries, highest score first."""
+        if count <= 0:
+            return []
+        return self.entries[:count]
