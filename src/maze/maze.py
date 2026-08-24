@@ -9,8 +9,8 @@ class Maze:
     grid: list[list[int]]
     cols: int
     rows: int
-    corners: list[tuple[int, int]]
-    center: tuple[int, int]
+    ghosts_sp: list[tuple[int, int]]
+    player_sp: tuple[int, int]
 
     def is_walkable(self, row: int, col: int) -> bool:
         if 0 <= row < self.rows and 0 <= col < self.cols:
