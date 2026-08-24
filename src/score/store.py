@@ -1,36 +1,5 @@
-from typing import List, Any
 from entities.player import Player
-from config.config import LevelConfig
-
-class GameConfig:
-    """
-    Data structure representing the parsed configuration file.
-    Aligns with the GameConfig UML provided.
-    """
-
-    def __init__(
-        self,
-        highscore_filename: str,
-        levels: List[LevelConfig],
-        lives: int,
-        pacgum: int,
-        points_per_pacgum: int,
-        points_per_super_pacgum: int,
-        points_per_ghost: int,
-        seed: int,
-        level_max_time: int,
-        cell_size: int,
-    ) -> None:
-        self.highscore_filename = highscore_filename
-        self.levels = levels
-        self.lives = lives
-        self.pacgum = pacgum
-        self.points_per_pacgum = points_per_pacgum
-        self.points_per_super_pacgum = points_per_super_pacgum
-        self.points_per_ghost = points_per_ghost
-        self.seed = seed
-        self.level_max_time = level_max_time
-        self.cell_size = cell_size
+from config.config import Config
 
 class ScoringSystem:
     """
@@ -41,7 +10,7 @@ class ScoringSystem:
     the same super-pacgum window is worth increasing points.
     """
 
-    def __init__(self, config: GameConfig) -> None:
+    def __init__(self, config: Config) -> None:
         """
         Create a scoring system from a fixed set of point values.
         """
