@@ -6,5 +6,90 @@
     "points_per_super_pacgum": 50,
     "points_per_ghost": 200,
     "seed": 42,
-    "level_max_time": 90
+    "level_max_time": 90,
+    "levels": [
+        {
+        "level_number": 1,
+        "width": 14,
+        "height": 10,
+        "seed": 12,
+        "level_max_time": 65,
+        "map_filename": "inc/maps/maze-1.txt",
+        "bonus_fruit_type": "Cherry",
+        "points_per_bonus_fruit": 200
+        },
+        {
+        "level_number": 2,
+        "width": 14,
+        "height": 10,
+        "map_filename": "inc/maps/maze.txt",
+        "level_max_time": 90,
+        "bonus_fruit_type":"Strawberry",
+        "points_per_bonus_fruit": 300,
+        "walls_color": "#1e2ac9"
+        },
+        {
+        "level_number": 3,
+        "width": 14,
+        "height": 12,
+        "seed": 1,
+        "level_max_time": 90,
+        "bonus_fruit_type":"Orange",
+        "points_per_bonus_fruit": 500
+        },
+        {
+        "level_number": 4,
+        "width": 8,
+        "height": 8,
+        "seed": 42,
+        "level_max_time": 90,
+        "bonus_fruit_type":"Orange",
+        "points_per_bonus_fruit": 500
+        },
+        {
+        "level_number": 5,
+        "width": 14,
+        "height": 10,
+        "level_max_time" : 222,
+        "map_filename": "inc/maps/maze-3.txt",
+        "bonus_fruit_type":"Orange",
+        "points_per_bonus_fruit": 500,
+        "walls_color": "#1e2ac9"
+        },
+        {
+        "level_number": 6,
+        "width": 12,
+        "height": 12,
+        "seed": 0,
+        "level_max_time": 190,
+        "bonus_fruit_type":"apple",
+        "points_per_bonus_fruit": 700
+        },
+        {
+        "level_number": 7,
+        "width": 13,
+        "height": 13,
+        "seed": 0,
+        "level_max_time": 200,
+        "bonus_fruit_type":"melon",
+        "points_per_bonus_fruit": 1000
+        },
+        {
+        "level_number": 9,
+        "width": 15,
+        "height": 13,
+        "seed": 0,
+        "level_max_time": 300,
+        "bonus_fruit_type":"banana",
+        "points_per_bonus_fruit": 2000
+        },
+        {
+        "level_number": 10,
+        "width": 14,
+        "height": 13,
+        "level_max_time": 300,
+        "bonus_fruit_type":"key",
+        "points_per_bonus_fruit": 5000
+        }
+    ]
 }
