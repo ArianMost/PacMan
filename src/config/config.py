@@ -28,9 +28,16 @@ DEFAULT_CONFIG: dict[str, Any] = {
 
 @dataclass
 class LevelConfig:
-    """Dimensions as maze cells for each level."""
+    """Dimensions and rules for a single level."""
+
+    level_number: int
     width: int
     height: int
+    seed: int
+    level_max_time: int
+    map_filename: str
+    bonus_fruit_type: str
+    points_per_bonus_fruit: int
 
 @dataclass
 class Config:
