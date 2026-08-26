@@ -1,6 +1,6 @@
 from entities.player import Player
 from score.store import ScoringSystem
-from entities.ghost import GhostState
+from entities.ghost import GHOST_NAMES_COLORS, GhostState
 from entities.ghost import Ghost
 from typing import List
 from entities.palletfield import PelletField
@@ -57,6 +57,31 @@ class GameState:
                     self.player.lose_life()
                     # self.restart_current_level()
 
+    def _create_ghosts(self, seed: int):
+        self.ghosts = []
+
+        for i in range(len(GHOST_NAMES_COLORS)):
+            # Get the ghost's name and color
+            name = GHOST_NAMES_COLORS[i][0]
+            color = GHOST_NAMES_COLORS[i][1]
+
+            # Get the ghost's starting position
+            col = self.maze.ghosts_sp[i][0]
+            row = self.maze.ghosts_sp[i][1]
+
+            # Create the ghost
+            ghost = Ghost(
+                col=col,
+                row=row,
+                name=name,
+                color=color
+            )
+
+            # Remember the ghost's starting position
+            ghost.set_home(col, row)
+
+            self.ghosts.append(ghost)
+
     def _load_level(self, level_index: int) -> None:
         levels = self.config.levels
         level_config = levels[level_index % len(levels)]
@@ -74,3 +99,4 @@ class GameState:
             perfect
         )
 
+        self._create_ghosts(seed)
