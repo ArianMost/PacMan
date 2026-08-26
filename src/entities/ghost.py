@@ -6,6 +6,12 @@ from entities.entity import Direction
 import random
 from src.maze.maze_adapter import Maze
 
+GHOST_NAMES_COLORS = [
+    ("Blinky", "#9B59B6"),
+    ("Pinky",  "#2ECC71"),
+    ("Inky",   "#F1C40F"),
+    ("Clyde",  "#3498DB")
+]
 
 class GhostState(Enum):
     """Enumeration representing the behavioral states of a ghost."""
@@ -58,7 +64,7 @@ class Ghost(Entity):
 
     def choose_direction(self, maze: Maze, target: Cell) -> None:
         """Pick `next_direction` given the current target cell and state.
- 
+
         Ghosts never reverse into the cell they just came from unless
         it's the only option (a dead end) — this is what stops them
         jittering back and forth and matches classic Pac-Man ghost
@@ -68,12 +74,12 @@ class Ghost(Entity):
         options = self.available_directions(maze)
         if not options:
             return
- 
+
         if len(options) > 1 and self.direction is not Direction.NONE:
             reverse = self.direction.opposite()
             if reverse in options:
                 options.remove(reverse)
- 
+
         if self.state is GhostState.FRIGHTENED:
             if random.random() < 0.5:
                 self.next_direction = random.choice(options)
@@ -97,7 +103,7 @@ class Ghost(Entity):
 
     def _chase_target(self, player_cell: Cell) -> Cell:
         """Compute the CHASE-mode target cell, varied by ghost personality.
- 
+
         - blinky: targets the player directly (classic aggressive chaser).
         - pinky: targets 4 cells ahead of the player (ambush).
         - inky: targets near the player with randomized jitter
@@ -144,6 +150,10 @@ class Ghost(Entity):
 
     def update_ai(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Advance AI + movement by `dt` seconds. Call once per frame.
+<<<<<<< HEAD
+=======
+
+>>>>>>> c71ebfb (added GHOST_NAMES_COLORS for ghost color mapping.)
         Dispatches on `state`:
           EATEN      -> race back to home corner, then revive into CHASE.
           FRIGHTENED -> flee-ish movement, timer ticks down to CHASE.
@@ -152,7 +162,15 @@ class Ghost(Entity):
         if self.state is GhostState.EATEN:
             self._update_eaten(maze, dt)
             return
+<<<<<<< HEAD
         if self.state is GhostState.FRIGHTENED:
             self._update_frightened(maze, dt, player_cell)
             return
+=======
+
+        if self.state is GhostState.FRIGHTENED:
+            self._update_frightened(maze, dt, player_cell)
+            return
+
+>>>>>>> c71ebfb (added GHOST_NAMES_COLORS for ghost color mapping.)
         self._update_chase(maze, dt, player_cell)
