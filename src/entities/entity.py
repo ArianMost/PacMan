@@ -1,5 +1,5 @@
 from enum import Enum
-from src.maze.maze_adapter import Maze
+from maze.maze_adapter import Maze
 
 
 class Direction(Enum):
@@ -46,6 +46,7 @@ _CARDINALS: tuple[Direction, ...] = (
 )
 
 Cell = tuple[int, int]
+
 
 class Entity:
     """A game entity that moves through the maze one cell at a time."""
@@ -107,8 +108,12 @@ class Entity:
         """Return all directions that are currently open in the maze."""
         return [d for d in _CARDINALS if self.can_move(maze, d)]
 
-    def update(self, maze: Maze, dt: float, speed_multiplier: float = 1.0) -> None:
-        """Move the entity based on its speed, direction, and the maze walls."""
+    def update(self,
+               maze: Maze,
+               dt: float,
+               speed_multiplier: float = 1.0) -> None:
+        """Move the entity based on its speed,
+        direction, and the maze walls."""
         if self.direction is Direction.NONE and self.next_direction is not Direction.NONE:
             if self.can_move(maze, self.next_direction):
                 self.direction = self.next_direction

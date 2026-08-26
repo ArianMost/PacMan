@@ -1,23 +1,51 @@
+from numpy._core import einsumfunc
+from numpy._core import einsumfunc
 from entities.player import Player
 from score.store import ScoringSystem
 from entities.ghost import GhostState
 from entities.ghost import Ghost
 from typing import List
 from entities.palletfield import PelletField
-from .maze import Maze
+# from maze.maze_adapter import Maze
 from config.config import Config
+from score.highscore import HighscoreStore
+from enum import Enum, auto
+
+
+class Phase(Enum):
+    MENU = auto()
+    INSTRUCTIONS = auto()
+    HIGHSCORES = auto()
+    PLAYING = auto()
+    PAUSED = auto()
+    ENTER_NAME = auto()
+    GAME_OVER = auto()
+    VICTORY = auto()
+    QUIT = auto()
+
 
 class GameState:
     def __init__(self, config: Config) -> None:
         self.config = config
+        self.highscores = HighscoreStore(filename='highscores.json')
         self.player = Player(config.lives)
         self.scoring = ScoringSystem(config)
         self.pellets = PelletField(set(), set())
         self.ghosts: List[Ghost] = []
-        self.maze: Maze = Maze()
+        self.phase = Phase.MENU
+        # self.maze: Maze = Maze()
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
         self.fruit_timer: float = 0.0
+
+    def start_new_game(self) -> None:
+        """Start a new game, resetting the player and loading level 1."""
+        self.player = Player(self.config.lives)
+        self.current_level_index = 0
+        # self.phase = Phase.PLAYING
+        # self._load_current_level()
+        self.highscores.load()
+        
 
     def update(self, dt: float) -> None:
         """Update the game for one frame."""
