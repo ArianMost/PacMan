@@ -4,8 +4,9 @@ from entities.ghost import GhostState
 from entities.ghost import Ghost
 from typing import List
 from entities.palletfield import PelletField
-from .maze import Maze
 from config.config import Config
+from src.maze.maze import Maze
+from src.maze.maze_adapter import MazeAdapter
 
 class GameState:
     def __init__(self, config: Config) -> None:
@@ -15,6 +16,7 @@ class GameState:
         self.pellets = PelletField(set(), set())
         self.ghosts: List[Ghost] = []
         self.maze: Maze = Maze()
+        self.maze_adapter = MazeAdapter()
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
         self.fruit_timer: float = 0.0
@@ -54,3 +56,21 @@ class GameState:
                 elif ghost.state is GhostState.CHASE:
                     self.player.lose_life()
                     # self.restart_current_level()
+
+    def _load_level(self, level_index: int) -> None:
+        levels = self.config.levels
+        level_config = levels[level_index % len(levels)]
+        perfect = False
+
+        if level_config.seed is not None:
+            seed = level_config.seed
+        else:
+            seed = self.config.seed + level_index
+
+        self.maze = self.maze_adapter.build(
+            level_config.width,
+            level_config.height,
+            seed,
+            perfect
+        )
+
