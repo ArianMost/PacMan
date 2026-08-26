@@ -1,5 +1,5 @@
 from enum import Enum
-from maze.maze_adapter import Maze
+from maze.maze import Maze
 
 
 class Direction(Enum):

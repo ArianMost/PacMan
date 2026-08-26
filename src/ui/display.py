@@ -29,7 +29,6 @@ class Application:
         self.surface = pygame.display.set_mode(
             (WINDOW_WIDTH, WINDOW_HEIGHT)
         )
-        print("Application created")
         pygame.display.set_caption("Pac-Man")
         self.big_font = pygame.font.Font(None, 64)
         self.small_font = pygame.font.Font(None, 36)
@@ -178,17 +177,65 @@ class Application:
         """Draw the screen that matches the current menu phase."""
         if self.state.phase is Phase.MENU:
             self._draw_menu()
-
         elif self.state.phase is Phase.INSTRUCTIONS:
             self._draw_instructions()
-
         elif self.state.phase is Phase.HIGHSCORES:
             self._draw_highscores()
+        elif self.state.phase is Phase.PLAYING:
+            self._draw_game()
+
+    def _draw_hud(self) -> None:
+        """Draw the current score, lives, level, and remaining time."""
+        score_text = f"Score: {self.state.player.score}"
+        lives_text = f"Lives: {self.state.player.lives}"
+        level_text = f"Level: {self.state.current_level_index + 1}"
+        time_text = f"Time: {int(self.state.level_time_remaining)}"
+        score_surface = self.small_font.render(
+            score_text,
+            True,
+            WHITE,
+        )
+        lives_surface = self.small_font.render(
+            lives_text,
+            True,
+            WHITE,
+        )
+        level_surface = self.small_font.render(
+            level_text,
+            True,
+            WHITE,
+        )
+        time_surface = self.small_font.render(
+            time_text,
+            True,
+            WHITE,
+        )
+        self.surface.blit(score_surface, (20, 20))
+        self.surface.blit(lives_surface, (20, 55))
+        level_rect = level_surface.get_rect(
+            midtop=(
+                self.surface.get_width() // 2,
+                20,
+            )
+        )
+        self.surface.blit(level_surface, level_rect)
+        time_rect = time_surface.get_rect(
+            top_right=(
+                self.surface.get_width() - 20,
+                20,
+            )
+        )
+        self.surface.blit(time_surface, time_rect)
+
+    def _draw_game(self) -> None:
+        """Draw the game and the HUD."""
+        self.surface.fill(BLACK)
+        # Draw your maze, pellets, player, ghosts, etc. here.
+        self._draw_hud()
 
 
 if __name__ == "__main__":
     pygame.init()
-    print("Program started")
     config = Config()
     highscores = HighscoreStore(HIGHSCORE_FILENAME)
     state = GameState(config)
@@ -198,5 +245,4 @@ if __name__ == "__main__":
         highscores,
         state,
     )
-
     app.run()

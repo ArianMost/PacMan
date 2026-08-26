@@ -5,6 +5,7 @@ description = "Pac-Man clone built for the 42 curriculum"
 requires-python = ">=3.10"
 dependencies = [
     "pygame>=2.5,<3.0",
+    "mazegenerator @ file:///workspaces/PacMan/mazegenerator-2.0.1-py3-none-any.whl",
 ]
 
 [dependency-groups]
