@@ -1,4 +1,6 @@
+import random
 from typing import Set, Tuple
+from src.maze.maze import Maze
 
 class PelletField:
     """
@@ -56,3 +58,37 @@ class PelletField:
             self.super_pacgums.remove(cell)
             return True
         return False
+
+
+def build_pellet_field(
+    maze: Maze,
+    seed: int,
+    corners: list[tuple[int, int]],
+    exclude: set[tuple[int, int]],
+    max_pacgums: int,
+) -> PelletField:
+    """Place super-pacgums on the four maze corners and pacgums on the
+    remaining open corridors, capped at ``max_pacgums``."""
+
+    pf = PelletField()
+    open_cells = [
+        (col, row)
+        for row in range(maze.rows)
+        for col in range(maze.cols)
+        if (
+            maze.is_walkable(col, row)
+            and (col, row) not in pf.super_pacgums
+            and (col, row) not in exclude
+        )
+    ]
+
+    random_seed = random.Random(seed)
+    pf.super_pacgums = set(corners)
+    random_seed.shuffle(open_cells)
+
+    if max_pacgums:
+        pf.pacgums = set(open_cells[: max(0, max_pacgums)])
+    else:
+        pf.pacgums = set(open_cells)
+
+    return pf
