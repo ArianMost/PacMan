@@ -1,3 +1,5 @@
+from enum import Enum
+
 from entities.player import Player
 from score.store import ScoringSystem
 from entities.ghost import GHOST_NAMES_COLORS, GhostState
@@ -8,6 +10,20 @@ from config.config import Config
 from src.constants import FRIGHTENED_DURATION
 from src.maze.maze import Maze
 from src.maze.maze_adapter import MazeAdapter
+
+
+class ScreenTypes(Enum):
+    """Identifiers for application screens used in navigation flow."""
+
+    MENU = "menu"
+    INSTRUCTIONS = "instructions"
+    HIGH_SCORES = "high_scores"
+    PLAYING = "playing"
+    PAUSED = "paused"
+    END_OF_GAME = "end_of_game"
+    GAME_OVER = "game_over"
+    VICTORY = "victory"
+    QUIT = "quit"
 
 class GameState:
     def __init__(self, config: Config) -> None:
@@ -116,3 +132,14 @@ class GameState:
             exclude=occupied_cells,
             max_pacgums=self.config.pacgum,
         )
+
+    def advance_level(self) -> None:
+        self.current_level_index += 1
+        if self.current_level_index >= len(self.config.levels):
+            self.phase = ScreenTypes.VICTORY
+            return
+        self._load_level(self.current_level_index)
+
+    def restart_current_level(self) -> None:
+        self._load_level(self.current_level_index)
+
