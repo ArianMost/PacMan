@@ -5,9 +5,17 @@ from score.store import ScoringSystem
 from entities.ghost import GHOST_NAMES_COLORS, GhostState
 from entities.ghost import Ghost
 from typing import List
+<<<<<<< HEAD
 from entities.palletfield import PelletField
 from .maze import Maze
 from config.config import Config
+=======
+from entities.palletfield import PelletField, build_pellet_field
+from config.config import Config
+from src.constants import FRIGHTENED_DURATION
+from src.maze.maze import Maze
+from src.maze.maze_adapter import MazeAdapter
+>>>>>>> 6521d2b (refactored ghost creation and completed load_level logic.)
 
 class GameState:
     def __init__(self, config: Config) -> None:
@@ -59,7 +67,7 @@ class GameState:
                     self.player.lose_life()
                     # self.restart_current_level()
 
-    def _create_ghosts(self, seed: int):
+    def _create_ghosts(self):
         self.ghosts = []
 
         for i in range(len(GHOST_NAMES_COLORS)):
@@ -84,6 +92,7 @@ class GameState:
 
             self.ghosts.append(ghost)
 
+
     def _load_level(self, level_index: int) -> None:
         levels = self.config.levels
         level_config = levels[level_index % len(levels)]
@@ -101,4 +110,18 @@ class GameState:
             perfect
         )
 
-        self._create_ghosts(seed)
+        self._create_ghosts()
+        self.player.respawn(*self.maze.player_sp)
+
+        occupied_cells = {(self.player.col, self.player.row)}
+
+        for ghost in self.ghosts:
+            occupied_cells.add((ghost.col, ghost.row))
+
+        self.pellets = build_pellet_field(
+            maze=self.maze,
+            seed=seed,
+            corners=self.maze.ghosts_sp,
+            exclude=occupied_cells,
+            max_pacgums=self.config.pacgum,
+        )
