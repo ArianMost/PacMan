@@ -1,5 +1,6 @@
 from typing import Set, Tuple
 
+
 class PelletField:
     """
     Manages all the consumable pellets (dots) in the maze.

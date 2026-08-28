@@ -1,9 +1,9 @@
 import sys
 from typing import Deque
 from collections import deque
-from src.constants import OPEN
-from src.maze.maze import Maze
-from src.maze.maze_generator import MazeGenerator
+from constants import OPEN
+from maze.maze import Maze
+from maze.maze_generator import MazeGenerator
 
 
 class MazeAdapter:
