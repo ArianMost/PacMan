@@ -28,7 +28,7 @@ class ScoringSystem:
         Returns:
             int: The number of points added.
         """
-        points = self.config.points_per_pacgum
+        points: int = self.config.points_per_pacgum
         player.add_score(points)
         return points
 
@@ -41,7 +41,7 @@ class ScoringSystem:
         Returns:
             int: The number of points added.
         """
-        points = self.config.points_per_super_pacgum
+        points: int = self.config.points_per_super_pacgum
         player.add_score(points)
         self._ghost_chain = 0
         return points

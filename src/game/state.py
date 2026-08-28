@@ -6,7 +6,7 @@ from entities.ghost import GhostState
 from entities.ghost import Ghost
 from typing import List
 from entities.palletfield import PelletField
-# from maze.maze_adapter import Maze
+from maze.maze_adapter import Maze
 from config.config import Config
 from score.highscore import HighscoreStore
 from enum import Enum, auto
@@ -42,43 +42,35 @@ class GameState:
         """Start a new game, resetting the player and loading level 1."""
         self.player = Player(self.config.lives)
         self.current_level_index = 0
-        # self.phase = Phase.PLAYING
-        # self._load_current_level()
-        self.highscores.load()
-        
+        self.phase = Phase.PLAYING
+        #self._load_current_level()
+        self.highscores.load()   
 
     def update(self, dt: float) -> None:
         """Update the game for one frame."""
 
         player_cell = (self.player.col, self.player.row)
-
         if self.pellets.eat_pacgum(player_cell):
             self.scoring.award_pacgum(self.player)
-
         elif self.pellets.eat_super_pacgum(player_cell):
             self.scoring.award_super_pacgum(self.player)
-
             for ghost in self.ghosts:
                 ghost.frighten(duration=5.0)
-
         if self.fruit_cell is not None:
             if player_cell == self.fruit_cell:
                 display_level = self.current_level_index + 1
                 self.scoring.award_fruit(self.player, display_level)
                 self.fruit_cell = None
-
         for ghost in self.ghosts:
             ghost.update_ai(
                 self.maze,
                 dt,
                 player_cell
             )
-
             if player_cell == (ghost.col, ghost.row):
                 if ghost.state is GhostState.FRIGHTENED:
                     self.scoring.award_ghost(self.player)
                     ghost.get_eaten(respawn_delay=3.0)
-
                 elif ghost.state is GhostState.CHASE:
                     self.player.lose_life()
                     # self.restart_current_level()
