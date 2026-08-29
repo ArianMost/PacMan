@@ -1,10 +1,10 @@
 from enum import Enum
 from typing import Tuple, Any
-from typing import ClassVar, TYPE_CHECKING
-from entity import Entity
+from typing import ClassVar
+from entities.entity import Entity
 from entities.entity import Direction
 import random
-from src.maze.maze import Maze
+from src.maze.maze_adapter import Maze
 
 GHOST_NAMES_COLORS = [
     ("Blinky", "#9B59B6"),
@@ -19,7 +19,9 @@ class GhostState(Enum):
     FRIGHTENED = 2
     EATEN = 3
 
+
 Cell = tuple[int, int]
+
 
 class Ghost(Entity):
     def __init__(self, name: str, color: Tuple[int, int, int]) -> None:
@@ -90,7 +92,9 @@ class Ghost(Entity):
                 options, key=lambda d: self._squared_distance(d, target)
             )
 
-    def _squared_distance(self, direction: Direction, target: Cell) -> float | Any:
+    def _squared_distance(self,
+                          direction: Direction,
+                          target: Cell) -> float | Any:
         """Squared distance from target if the ghost stepped in `direction`."""
         col = self.col + direction.dx
         row = self.row + direction.dy
@@ -129,7 +133,10 @@ class Ghost(Entity):
             self.snap(self.home_col, self.home_row)
             self.state = GhostState.CHASE
 
-    def _update_frightened(self, maze: Maze, dt: float, player_cell: Cell) -> None:
+    def _update_frightened(self,
+                           maze: Maze,
+                           dt: float,
+                           player_cell: Cell) -> None:
         self.frightened_timer = max(0.0, self.frightened_timer - dt)
         self.choose_direction(maze, player_cell)
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
@@ -143,7 +150,6 @@ class Ghost(Entity):
 
     def update_ai(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Advance AI + movement by `dt` seconds. Call once per frame.
-
         Dispatches on `state`:
           EATEN      -> race back to home corner, then revive into CHASE.
           FRIGHTENED -> flee-ish movement, timer ticks down to CHASE.
@@ -152,9 +158,7 @@ class Ghost(Entity):
         if self.state is GhostState.EATEN:
             self._update_eaten(maze, dt)
             return
-
         if self.state is GhostState.FRIGHTENED:
             self._update_frightened(maze, dt, player_cell)
             return
-
         self._update_chase(maze, dt, player_cell)

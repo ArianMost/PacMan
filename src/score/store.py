@@ -1,6 +1,7 @@
 from entities.player import Player
 from config.config import Config
 
+
 class ScoringSystem:
     """
     Applies scoring rules to a Player as game events occur.
@@ -17,7 +18,6 @@ class ScoringSystem:
         self.config = config
         self._ghost_chain: int = 0
 
-
     def award_pacgum(self, player: Player) -> int:
         """
         Award points for eating a regular pacgum.
@@ -28,21 +28,20 @@ class ScoringSystem:
         Returns:
             int: The number of points added.
         """
-        points = self.config.points_per_pacgum
+        points: int = self.config.points_per_pacgum
         player.add_score(points)
         return points
 
     def award_super_pacgum(self, player: Player) -> int:
         """
-        Award points for eating a super-pacgum and reset the chain.
-        
+        Award points for eating a super-pacgum and reset the chain.    
         Args:
             player (Player): The player entity to award points to.
 
         Returns:
             int: The number of points added.
         """
-        points = self.config.points_per_super_pacgum
+        points: int = self.config.points_per_super_pacgum
         player.add_score(points)
         self._ghost_chain = 0
         return points
@@ -53,7 +52,6 @@ class ScoringSystem:
 
         Each consecutive ghost eaten during the same frightened window
         is worth double the previous one.
-        
         Args:
             player (Player): The player entity to award points to.
 

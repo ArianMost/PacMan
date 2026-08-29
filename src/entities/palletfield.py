@@ -2,6 +2,7 @@ import random
 from typing import Set, Tuple
 from src.maze.maze import Maze
 
+
 class PelletField:
     """
     Manages all the consumable pellets (dots) in the maze.
