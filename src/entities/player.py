@@ -1,4 +1,7 @@
-class Player:
+from src.entities.entity import Direction, Entity
+
+
+class Player(Entity):
     def __init__(self, lives: int, score: int = 0) -> None:
         self.lives = lives
         self.score = score
@@ -15,4 +18,5 @@ class Player:
         return False
 
     def respawn(self, col: int, row: int) -> None:
-        pass
+        self.snap(col, row)
+        self.next_direction = Direction.NONE
