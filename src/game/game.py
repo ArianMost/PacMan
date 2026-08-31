@@ -1,9 +1,21 @@
 import pygame
 from src.config.config import Config
+from src.entities.entity import Direction
 from src.game.state import GameState, ScreenTypes
 from src.score.highscore import HighscoreStore
 from src.ui.display import MAIN_MENU_OPTIONS
 
+
+DIRECTION_KEY = {
+    pygame.K_UP: Direction.UP,
+    pygame.K_w: Direction.UP,
+    pygame.K_DOWN: Direction.DOWN,
+    pygame.K_s: Direction.DOWN,
+    pygame.K_LEFT: Direction.LEFT,
+    pygame.K_a: Direction.LEFT,
+    pygame.K_RIGHT: Direction.RIGHT,
+    pygame.K_d: Direction.RIGHT,
+}
 
 class Game:
     def __init__(self, config: Config) -> None:
@@ -39,6 +51,7 @@ class Game:
                     self._handle_name_entry(event)
 
     def _handle_menu_keys(self, event: pygame.event.Event) -> None:
+        """Handle keyboard input while the main menu is displayed."""
         if event.key == pygame.K_DOWN:
             self.menu_index += 1
             if self.menu_index >= len(MAIN_MENU_OPTIONS):
@@ -64,6 +77,41 @@ class Game:
                 self.state.phase = ScreenTypes.INSTRUCTIONS
             elif item == "Exit":
                 self.running = False
+
+    def _handle_play_keys(self, event: pygame.event.Event) -> None:
+        """Handle keyboard input during gameplay."""
+        if event.key in DIRECTION_KEY:
+            direction = DIRECTION_KEY[event.key]
+            self.state.handle_player_direction(direction)
+
+        elif event.key == pygame.K_p or event.key == pygame.K_ESCAPE:
+            self.pause_index = 0
+            self.state.handle_pause()
+
+        elif event.key == pygame.K_F1:
+            #TODO: cheat key
+            pass
+
+        elif event.key == pygame.K_F2:
+            #TODO: cheat key
+            pass
+
+        elif event.key == pygame.K_F3:
+            #TODO: cheat key
+            pass
+
+        elif event.key == pygame.K_F4:
+            #TODO: cheat key
+            pass
+
+        elif event.key == pygame.K_F5:
+            #TODO: cheat key
+            pass
+
+        elif event.key == pygame.K_F6:
+            #TODO: cheat key
+            pass
+
 
     def render(self) -> None:
         ...
