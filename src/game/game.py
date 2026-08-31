@@ -24,6 +24,7 @@ class Game:
         self.highscores = HighscoreStore(self.config.highscore_filename)
         self.state = GameState(self.config)
         self.menu_index = 0
+        self.pause_index = 0
 
 
     def run(self) -> None:
@@ -111,6 +112,29 @@ class Game:
         elif event.key == pygame.K_F6:
             #TODO: cheat key
             pass
+
+    def _handle_pause_keys(self, event: pygame.event.Event) -> None:
+        if event.key == pygame.K_DOWN:
+            self.pause_index += 1
+
+            if self.pause_index > 1:
+                self.pause_index = 0
+
+        elif event.key == pygame.K_UP:
+            self.pause_index -= 1
+
+            if self.pause_index < 0:
+                self.pause_index = 1
+
+        elif event.key == pygame.K_ESCAPE or event.key == pygame.K_p:
+            if self.pause_index == 0:
+                self.state.handle_pause()
+
+        elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+            if self.pause_index == 0:
+                self.state.handle_pause()
+            else:
+                self.state.phase = ScreenTypes.MENU
 
 
     def render(self) -> None:
