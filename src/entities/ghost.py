@@ -150,10 +150,6 @@ class Ghost(Entity):
 
     def update_ai(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Advance AI + movement by `dt` seconds. Call once per frame.
-<<<<<<< HEAD
-=======
-
->>>>>>> c71ebfb (added GHOST_NAMES_COLORS for ghost color mapping.)
         Dispatches on `state`:
           EATEN      -> race back to home corner, then revive into CHASE.
           FRIGHTENED -> flee-ish movement, timer ticks down to CHASE.
@@ -162,15 +158,9 @@ class Ghost(Entity):
         if self.state is GhostState.EATEN:
             self._update_eaten(maze, dt)
             return
-<<<<<<< HEAD
-        if self.state is GhostState.FRIGHTENED:
-            self._update_frightened(maze, dt, player_cell)
-            return
-=======
 
         if self.state is GhostState.FRIGHTENED:
             self._update_frightened(maze, dt, player_cell)
             return
 
->>>>>>> c71ebfb (added GHOST_NAMES_COLORS for ghost color mapping.)
         self._update_chase(maze, dt, player_cell)

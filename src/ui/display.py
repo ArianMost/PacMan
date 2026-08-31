@@ -134,6 +134,25 @@ class Application:
         #     self.state.set_player_direction("LEFT")
         # elif event.key == pygame.K_RIGHT:
         #     self.state.set_player_direction("RIGHT")
+        elif event.key == pygame.K_F1:
+            self.state.cheat.toggle_master()
+            status = "ENABLED" if self.state.cheat.enabled else "DISABLED"
+            print(f"Cheat Mode: {status}")
+        elif event.key == pygame.K_F2:
+            self.state.cheat.toggle_invincible()
+            print(f"Invincibility: {self.state.cheat.invincible}")
+        elif event.key == pygame.K_F3:
+            self.state.cheat.toggle_ghosts_frozen()
+            print(f"Ghosts Frozen: {self.state.cheat.ghosts_frozen}")
+        elif event.key == pygame.K_F4:
+            self.state.cheat.toggle_speed_boost()
+            print(f"Speed Boost: {self.state.cheat.speed_boost}")
+        elif event.key == pygame.K_F5:
+            self.state.cheat_extra_life()
+            print(f"Extra Life Granted! Lives: {self.state.player.lives}")
+        elif event.key == pygame.K_F6:
+            self.state.cheat_skip_level()
+            print("Level Skipped!")
 
     def _handle_pause_input(self, event: pygame.event.Event) -> None:
         """Handle keyboard input while the pause menu is displayed."""

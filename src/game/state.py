@@ -1,20 +1,21 @@
-from enum import Enum
 from entities.player import Player
 from score.store import ScoringSystem
 from entities.ghost import GHOST_NAMES_COLORS, GhostState
 from entities.ghost import Ghost
 from typing import List
 from entities.palletfield import PelletField, build_pellet_field
+from maze.maze_adapter import Maze
+from src.maze.maze_adapter import MazeAdapter
 from config.config import Config
 from src.constants import FRIGHTENED_DURATION
 from src.maze.maze import Maze
 from src.maze.maze_adapter import MazeAdapter
 from score.highscore import HighscoreStore
+from enum import Enum
+from cheat import CheatMode
 
 
 class ScreenTypes(Enum):
-    """Identifiers for application screens used in navigation flow."""
-
     MENU = "menu"
     INSTRUCTIONS = "instructions"
     HIGH_SCORES = "high_scores"
@@ -25,31 +26,50 @@ class ScreenTypes(Enum):
     VICTORY = "victory"
     QUIT = "quit"
 
+
 class GameState:
     def __init__(self, config: Config) -> None:
         self.config = config
-        self.highscores = HighscoreStore(filename='highscores.json')
+        self.highscores = HighscoreStore(filename="highscores.json")
         self.player = Player(config.lives)
         self.scoring = ScoringSystem(config)
         self.pellets = PelletField(set(), set())
         self.ghosts: List[Ghost] = []
+        self.phase = ScreenTypes.MENU
         self.maze: Maze = Maze()
+        self.maze_adapter = MazeAdapter()
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
         self.fruit_timer: float = 0.0
+        self.cheat = CheatMode()
 
     def start_new_game(self) -> None:
         """Start a new game, resetting the player and loading level 1."""
         self.player = Player(self.config.lives)
         self.current_level_index = 0
-        self.phase = Phase.PLAYING
-        #self._load_current_level()
-        self.highscores.load()   
+        self.phase = ScreenTypes.PLAYING
+        self._load_level(self.current_level_index)
+        self.highscores.load()
+
+    def cheat_skip_level(self) -> None:
+        """Instantly beat the current level."""
+        if self.cheat.enabled:
+            self.advance_level()
+
+    def cheat_extra_life(self) -> None:
+        """Grant the player an extra life."""
+        if self.cheat.enabled:
+            self.player.lives += 1
 
     def update(self, dt: float) -> None:
         """Update the game for one frame."""
 
         player_cell = (self.player.col, self.player.row)
+        if self.cheat.enabled and self.cheat.speed_boost:
+            speed_mult = self.cheat.player_speed_multiplier
+        else:
+            speed_mult = 1.0
+        self.player.update(self.maze, dt, speed_multiplier=speed_mult)
         if self.pellets.eat_pacgum(player_cell):
             self.scoring.award_pacgum(self.player)
         elif self.pellets.eat_super_pacgum(player_cell):
@@ -62,18 +82,16 @@ class GameState:
                 self.scoring.award_fruit(self.player, display_level)
                 self.fruit_cell = None
         for ghost in self.ghosts:
-            ghost.update_ai(
-                self.maze,
-                dt,
-                player_cell
-            )
+            if not (self.cheat.enabled and self.cheat.ghosts_frozen):
+                ghost.update_ai(self.maze, dt, player_cell)
             if player_cell == (ghost.col, ghost.row):
                 if ghost.state is GhostState.FRIGHTENED:
                     self.scoring.award_ghost(self.player)
                     ghost.get_eaten(respawn_delay=3.0)
                 elif ghost.state is GhostState.CHASE:
-                    self.player.lose_life()
-                    # self.restart_current_level()
+                    if not (self.cheat.enabled and self.cheat.invincible):
+                        self.player.lose_life()
+                        self.restart_current_level()
 
     def _create_ghosts(self):
         self.ghosts = []
@@ -88,18 +106,12 @@ class GameState:
             row = self.maze.ghosts_sp[i][1]
 
             # Create the ghost
-            ghost = Ghost(
-                col=col,
-                row=row,
-                name=name,
-                color=color
-            )
+            ghost = Ghost(col=col, row=row, name=name, color=color)
 
             # Remember the ghost's starting position
             ghost.set_home(col, row)
 
             self.ghosts.append(ghost)
-
 
     def _load_level(self, level_index: int) -> None:
         levels = self.config.levels
@@ -112,10 +124,7 @@ class GameState:
             seed = self.config.seed + level_index
 
         self.maze = self.maze_adapter.build(
-            level_config.width,
-            level_config.height,
-            seed,
-            perfect
+            level_config.width, level_config.height, seed, perfect
         )
 
         self._create_ghosts()
