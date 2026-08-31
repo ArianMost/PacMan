@@ -1,5 +1,5 @@
 import pygame
-from game.state import GameState, Phase
+from game.state import GameState, ScreenTypes
 from config.config import Config
 from score.highscore import HighscoreStore
 
@@ -29,9 +29,7 @@ class Application:
         self.config = config
         self.highscores = highscores
         self.state = state
-        self.surface = pygame.display.set_mode(
-            (WINDOW_WIDTH, WINDOW_HEIGHT)
-        )
+        self.surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Pac-Man")
         self.big_font = pygame.font.Font(None, 64)
         self.small_font = pygame.font.Font(None, 36)
@@ -43,33 +41,33 @@ class Application:
         """Perform the action selected in the main menu."""
         option = MAIN_MENU_OPTIONS[self.menu_selected]
         if option == "Start Game":
-            self.state.start_new_game() 
+            self.state.start_new_game()
         elif option == "View Highscores":
-            self.state.phase = Phase.HIGHSCORES
+            self.state.phase = ScreenTypes.HIGH_SCORES
         elif option == "Instructions":
-            self.state.phase = Phase.INSTRUCTIONS
+            self.state.phase = ScreenTypes.INSTRUCTIONS
         elif option == "Exit":
-            self.state.phase = Phase.QUIT
+            self.state.phase = ScreenTypes.QUIT
 
     def _select_pause_option(self) -> None:
         """Perform the action selected in the pause menu."""
         option = PAUSE_MENU_OPTIONS[self.pause_selected]
         if option == "Resume":
-            self.state.phase = Phase.PLAYING
+            self.state.phase = ScreenTypes.PLAYING
         elif option == "Return to Main Menu":
             self.pause_selected = 0
             self.menu_selected = 0
-            self.state.phase = Phase.MENU
+            self.state.phase = ScreenTypes.MENU
 
     def run(self) -> None:
         """Run the application until the user chooses Exit."""
         clock = pygame.time.Clock()
 
-        # The loop runs as long as the state is not Phase.QUIT
-        while self.state.phase is not Phase.QUIT:
+        # The loop runs as long as the state is not phase.QUIT
+        while self.state.phase is not ScreenTypes.QUIT:
             dt = clock.tick(FPS) / 1000.0
             self._handle_events()
-            if self.state.phase is Phase.PLAYING:
+            if self.state.phase is ScreenTypes.PLAYING:
                 self.state.update(dt)
             self._draw()
             pygame.display.flip()
@@ -79,35 +77,43 @@ class Application:
         """Handle keyboard and window events for the menu phase."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.state.phase = Phase.QUIT
+                self.state.phase = ScreenTypes.QUIT
                 continue
             if event.type != pygame.KEYDOWN:
                 continue
             # 1. Main Menu Controls
-            if self.state.phase is Phase.MENU:
+            if self.state.phase is ScreenTypes.MENU:
                 self._handle_menu_input(event)
             # 2. Return to Menu from Instructions/Highscores
-            elif self.state.phase in (Phase.INSTRUCTIONS, Phase.HIGHSCORES):
+            elif self.state.phase in (
+                ScreenTypes.INSTRUCTIONS,
+                ScreenTypes.HIGH_SCORES,
+            ):
                 if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
-                    self.state.phase = Phase.MENU
-            elif self.state.phase is Phase.PLAYING:
+                    self.state.phase = ScreenTypes.MENU
+            elif self.state.phase is ScreenTypes.PLAYING:
                 self._handle_playing_input(event)
-            elif self.state.phase is Phase.PAUSED:
+            elif self.state.phase is ScreenTypes.PAUSED:
                 self._handle_pause_input(event)
-            elif self.state.phase in (Phase.GAME_OVER, Phase.VICTORY):
+            elif self.state.phase in (
+                ScreenTypes.GAME_OVER,
+                ScreenTypes.VICTORY,
+            ):
                 self._handle_end_screen_input(event)
-            elif self.state.phase is Phase.ENTER_NAME:
+            elif self.state.phase is ScreenTypes.ENTER_NAME:
                 self._handle_enter_name_input(event)
 
     def _handle_menu_input(self, event: pygame.event.Event) -> None:
         """Handle keyboard input while the main menu is displayed."""
         if event.key in (pygame.K_UP, pygame.K_w):
-            self.menu_selected = (self.menu_selected -
-                                  1) % len(MAIN_MENU_OPTIONS)
+            self.menu_selected = (self.menu_selected - 1) % len(
+                MAIN_MENU_OPTIONS
+            )
 
         elif event.key in (pygame.K_DOWN, pygame.K_s):
-            self.menu_selected = (self.menu_selected +
-                                  1) % len(MAIN_MENU_OPTIONS)
+            self.menu_selected = (self.menu_selected + 1) % len(
+                MAIN_MENU_OPTIONS
+            )
 
         elif event.key == pygame.K_RETURN:
             self._select_menu_option()
@@ -116,7 +122,7 @@ class Application:
         """Handle keyboard input during gameplay."""
         if event.key == pygame.K_ESCAPE:
             self.pause_selected = 0
-            self.state.phase = Phase.PAUSED
+            self.state.phase = ScreenTypes.PAUSED
         # TODO: forward arrow/WASD keys to
         # self.state.set_player_direction(...) once Player movement
         # input is wired up.
@@ -132,17 +138,19 @@ class Application:
     def _handle_pause_input(self, event: pygame.event.Event) -> None:
         """Handle keyboard input while the pause menu is displayed."""
         if event.key in (pygame.K_UP, pygame.K_w):
-            self.pause_selected = (self.pause_selected -
-                                   1) % len(PAUSE_MENU_OPTIONS)
+            self.pause_selected = (self.pause_selected - 1.0) % len(
+                PAUSE_MENU_OPTIONS
+            )
         elif event.key in (pygame.K_DOWN, pygame.K_s):
-            self.pause_selected = (self.pause_selected +
-                                   1) % len(PAUSE_MENU_OPTIONS)
+            self.pause_selected = (self.pause_selected + 1) % len(
+                PAUSE_MENU_OPTIONS
+            )
         elif event.key == pygame.K_RETURN:
             self._select_pause_option()
         elif event.key == pygame.K_ESCAPE:
             # ESC while paused resumes, mirroring how ESC opened the
             # pause menu in the first place.
-            self.state.phase = Phase.PLAYING
+            self.state.phase = ScreenTypes.PLAYING
 
     def _handle_end_screen_input(self, event: pygame.event.Event) -> None:
         """Handle input on the Game Over / Victory screens.
@@ -151,7 +159,7 @@ class Application:
         """
         if event.key in (pygame.K_RETURN, pygame.K_SPACE):
             self.name_buffer = ""
-            self.state.phase = Phase.ENTER_NAME
+            self.state.phase = ScreenTypes.ENTER_NAME
 
     def _handle_enter_name_input(self, event: pygame.event.Event) -> None:
         """Handle typing a name to save on the highscore list."""
@@ -160,13 +168,13 @@ class Application:
                 self.highscores.add(self.name_buffer, self.state.player.score)
                 self.highscores.save()
                 self.menu_selected = 0
-                self.state.phase = Phase.MENU
+                self.state.phase = ScreenTypes.MENU
         elif event.key == pygame.K_BACKSPACE:
             self.name_buffer = self.name_buffer[:-1]
         elif event.key == pygame.K_ESCAPE:
             # Let the player skip saving instead of forcing a name.
             self.menu_selected = 0
-            self.state.phase = Phase.MENU
+            self.state.phase = ScreenTypes.MENU
         else:
             char = event.unicode
             is_allowed = char.isalnum() or char == " "
@@ -185,8 +193,10 @@ class Application:
             text = f"> {option} <" if is_selected else option
             option_surface = self.small_font.render(text, True, color)
             option_rect = option_surface.get_rect(
-                center=(self.surface.get_width() // 2,
-                        start_y + index * line_height)
+                center=(
+                    self.surface.get_width() // 2,
+                    start_y + index * line_height,
+                )
             )
             self.surface.blit(option_surface, option_rect)
         self._draw_hint("Arrows/WASD to move, Enter to select")
@@ -240,20 +250,22 @@ class Application:
             text = f"> {option} <" if is_selected else option
             option_surface = self.small_font.render(text, True, color)
             option_rect = option_surface.get_rect(
-                center=(self.surface.get_width() // 2,
-                        start_y + index * line_height)
+                center=(
+                    self.surface.get_width() // 2,
+                    start_y + index * line_height,
+                )
             )
             self.surface.blit(option_surface, option_rect)
         self._draw_hint("Arrows/WASD to move, Enter to select")
 
-    def _draw_title(self,
-                    text: str,
-                    y: int,
-                    color: tuple[int, int, int] = YELLOW) -> None:
+    def _draw_title(
+        self, text: str, y: int, color: tuple[int, int, int] = YELLOW
+    ) -> None:
         """Draw a title centered horizontally, yellow by default."""
         title_surface = self.big_font.render(text, True, color)
-        title_rect = title_surface.get_rect(center=(self.surface.get_width()
-                                                    // 2, y))
+        title_rect = title_surface.get_rect(
+            center=(self.surface.get_width() // 2, y)
+        )
         self.surface.blit(title_surface, title_rect)
 
     def _draw_game_over(self) -> None:
@@ -313,8 +325,10 @@ class Application:
         for index, line in enumerate(lines):
             line_surface = self.small_font.render(line, True, WHITE)
             line_rect = line_surface.get_rect(
-                center=(self.surface.get_width() // 2,
-                        start_y + index * line_height)
+                center=(
+                    self.surface.get_width() // 2,
+                    start_y + index * line_height,
+                )
             )
             self.surface.blit(line_surface, line_rect)
 
@@ -322,28 +336,30 @@ class Application:
         """Draw a small grey instruction at the bottom of the screen."""
         hint_surface = self.small_font.render(text, True, GREY)
         hint_rect = hint_surface.get_rect(
-            center=(self.surface.get_width() // 2,
-                    self.surface.get_height() - 40)
+            center=(
+                self.surface.get_width() // 2,
+                self.surface.get_height() - 40,
+            )
         )
         self.surface.blit(hint_surface, hint_rect)
 
     def _draw(self) -> None:
         """Draw the screen that matches the current menu phase."""
-        if self.state.phase is Phase.MENU:
+        if self.state.phase is ScreenTypes.MENU:
             self._draw_menu()
-        elif self.state.phase is Phase.INSTRUCTIONS:
+        elif self.state.phase is ScreenTypes.INSTRUCTIONS:
             self._draw_instructions()
-        elif self.state.phase is Phase.HIGHSCORES:
+        elif self.state.phase is ScreenTypes.HIGH_SCORES:
             self._draw_highscores()
-        elif self.state.phase is Phase.PLAYING:
+        elif self.state.phase is ScreenTypes.PLAYING:
             self._draw_game()
-        elif self.state.phase is Phase.PAUSED:
+        elif self.state.phase is ScreenTypes.PAUSED:
             self._draw_pause_menu()
-        elif self.state.phase is Phase.GAME_OVER:
+        elif self.state.phase is ScreenTypes.GAME_OVER:
             self._draw_game_over()
-        elif self.state.phase is Phase.VICTORY:
+        elif self.state.phase is ScreenTypes.VICTORY:
             self._draw_victory()
-        elif self.state.phase is Phase.ENTER_NAME:
+        elif self.state.phase is ScreenTypes.END_OF_GAME:
             self._draw_enter_name()
 
     def _draw_hud(self) -> None:
