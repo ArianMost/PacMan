@@ -5,6 +5,7 @@ from entities.ghost import Ghost
 from typing import List
 from entities.palletfield import PelletField, build_pellet_field
 from maze.maze_adapter import Maze
+from src.entities.entity import Direction
 from src.maze.maze_adapter import MazeAdapter
 from config.config import Config
 from score.highscore import HighscoreStore
@@ -32,6 +33,7 @@ class GameState:
         self.pellets = PelletField(set(), set())
         self.ghosts: List[Ghost] = []
         self.phase = ScreenTypes.MENU
+        self.previous_screen = ScreenTypes.MENU
         self.maze: Maze = Maze()
         self.maze_adapter = MazeAdapter()
         self.current_level_index: int = 0
@@ -74,6 +76,15 @@ class GameState:
                 elif ghost.state is GhostState.CHASE:
                     self.player.lose_life()
                     self.restart_current_level()
+
+    def handle_player_direction(self, direction: Direction) -> None:
+        self.player.next_direction = direction
+
+    def handle_pause(self) -> None:
+        if self.phase == ScreenTypes.PLAYING:
+            self.phase = ScreenTypes.PAUSED
+        elif self.phase == ScreenTypes.PAUSED:
+            self.phase = ScreenTypes.PLAYING
 
     def _create_ghosts(self):
         self.ghosts = []
