@@ -158,7 +158,9 @@ class Ghost(Entity):
         if self.state is GhostState.EATEN:
             self._update_eaten(maze, dt)
             return
+
         if self.state is GhostState.FRIGHTENED:
             self._update_frightened(maze, dt, player_cell)
             return
+
         self._update_chase(maze, dt, player_cell)

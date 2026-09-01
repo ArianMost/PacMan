@@ -89,11 +89,10 @@ classDiagram
         +submit_highscore() bool
     }
 
-    class Phase {
-        <<enumeration>>
+    class ScreenTypes {
         MENU
         INSTRUCTIONS
-        HIGHSCORES
+        HIGH_SCORES
         PLAYING
         PAUSED
         ENTER_NAME
