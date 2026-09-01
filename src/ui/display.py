@@ -1,6 +1,5 @@
 import pygame
 from game.state import GameState, ScreenTypes
-from config.config import Config
 from score.highscore import HighscoreStore
 
 BLACK = (0, 0, 0)
@@ -12,193 +11,27 @@ GREEN = (60, 220, 90)
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
-FPS = 60
-HIGHSCORE_FILENAME = "highscore.json"
 
 MAIN_MENU_OPTIONS = ["Start Game", "View Highscores", "Instructions", "Exit"]
 PAUSE_MENU_OPTIONS = ["Resume", "Return to Main Menu"]
 
 
-class Application:
+class Display:
     def __init__(
         self,
-        config: Config,
         highscores: HighscoreStore,
         state: GameState,
+        menu_index: int,
+        pause_index: int
     ) -> None:
-        self.config = config
         self.highscores = highscores
         self.state = state
         self.surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Pac-Man")
         self.big_font = pygame.font.Font(None, 64)
         self.small_font = pygame.font.Font(None, 36)
-        self.menu_selected = 0
-        self.pause_selected = 0
-        self.name_buffer = ""
-
-    def _select_menu_option(self) -> None:
-        """Perform the action selected in the main menu."""
-        option = MAIN_MENU_OPTIONS[self.menu_selected]
-        if option == "Start Game":
-            self.state.start_new_game()
-        elif option == "View Highscores":
-            self.state.phase = ScreenTypes.HIGH_SCORES
-        elif option == "Instructions":
-            self.state.phase = ScreenTypes.INSTRUCTIONS
-        elif option == "Exit":
-            self.state.phase = ScreenTypes.QUIT
-
-    def _select_pause_option(self) -> None:
-        """Perform the action selected in the pause menu."""
-        option = PAUSE_MENU_OPTIONS[self.pause_selected]
-        if option == "Resume":
-            self.state.phase = ScreenTypes.PLAYING
-        elif option == "Return to Main Menu":
-            self.pause_selected = 0
-            self.menu_selected = 0
-            self.state.phase = ScreenTypes.MENU
-
-    def run(self) -> None:
-        """Run the application until the user chooses Exit."""
-        clock = pygame.time.Clock()
-
-        # The loop runs as long as the state is not phase.QUIT
-        while self.state.phase is not ScreenTypes.QUIT:
-            dt = clock.tick(FPS) / 1000.0
-            self._handle_events()
-            if self.state.phase is ScreenTypes.PLAYING:
-                self.state.update(dt)
-            self._draw()
-            pygame.display.flip()
-        pygame.quit()
-
-    def _handle_events(self) -> None:
-        """Handle keyboard and window events for the menu phase."""
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.state.phase = ScreenTypes.QUIT
-                continue
-            if event.type != pygame.KEYDOWN:
-                continue
-            # 1. Main Menu Controls
-            if self.state.phase is ScreenTypes.MENU:
-                self._handle_menu_input(event)
-            # 2. Return to Menu from Instructions/Highscores
-            elif self.state.phase in (
-                ScreenTypes.INSTRUCTIONS,
-                ScreenTypes.HIGH_SCORES,
-            ):
-                if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
-                    self.state.phase = ScreenTypes.MENU
-            elif self.state.phase is ScreenTypes.PLAYING:
-                self._handle_playing_input(event)
-            elif self.state.phase is ScreenTypes.PAUSED:
-                self._handle_pause_input(event)
-            elif self.state.phase in (
-                ScreenTypes.GAME_OVER,
-                ScreenTypes.VICTORY,
-            ):
-                self._handle_end_screen_input(event)
-            elif self.state.phase is ScreenTypes.ENTER_NAME:
-                self._handle_enter_name_input(event)
-
-    def _handle_menu_input(self, event: pygame.event.Event) -> None:
-        """Handle keyboard input while the main menu is displayed."""
-        if event.key in (pygame.K_UP, pygame.K_w):
-            self.menu_selected = (self.menu_selected - 1) % len(
-                MAIN_MENU_OPTIONS
-            )
-
-        elif event.key in (pygame.K_DOWN, pygame.K_s):
-            self.menu_selected = (self.menu_selected + 1) % len(
-                MAIN_MENU_OPTIONS
-            )
-
-        elif event.key == pygame.K_RETURN:
-            self._select_menu_option()
-
-    def _handle_playing_input(self, event: pygame.event.Event) -> None:
-        """Handle keyboard input during gameplay."""
-        if event.key == pygame.K_ESCAPE:
-            self.pause_selected = 0
-            self.state.phase = ScreenTypes.PAUSED
-        # TODO: forward arrow/WASD keys to
-        # self.state.set_player_direction(...) once Player movement
-        # input is wired up.
-        # if event.key == pygame.K_UP:
-        #     self.state.set_player_direction("UP")
-        # elif event.key == pygame.K_DOWN:
-        #     self.state.set_player_direction("DOWN")
-        # elif event.key == pygame.K_LEFT:
-        #     self.state.set_player_direction("LEFT")
-        # elif event.key == pygame.K_RIGHT:
-        #     self.state.set_player_direction("RIGHT")
-        elif event.key == pygame.K_F1:
-            self.state.cheat.toggle_master()
-            status = "ENABLED" if self.state.cheat.enabled else "DISABLED"
-            print(f"Cheat Mode: {status}")
-        elif event.key == pygame.K_F2:
-            self.state.cheat.toggle_invincible()
-            print(f"Invincibility: {self.state.cheat.invincible}")
-        elif event.key == pygame.K_F3:
-            self.state.cheat.toggle_ghosts_frozen()
-            print(f"Ghosts Frozen: {self.state.cheat.ghosts_frozen}")
-        elif event.key == pygame.K_F4:
-            self.state.cheat.toggle_speed_boost()
-            print(f"Speed Boost: {self.state.cheat.speed_boost}")
-        elif event.key == pygame.K_F5:
-            self.state.cheat_extra_life()
-            print(f"Extra Life Granted! Lives: {self.state.player.lives}")
-        elif event.key == pygame.K_F6:
-            self.state.cheat_skip_level()
-            print("Level Skipped!")
-
-    def _handle_pause_input(self, event: pygame.event.Event) -> None:
-        """Handle keyboard input while the pause menu is displayed."""
-        if event.key in (pygame.K_UP, pygame.K_w):
-            self.pause_selected = (self.pause_selected - 1.0) % len(
-                PAUSE_MENU_OPTIONS
-            )
-        elif event.key in (pygame.K_DOWN, pygame.K_s):
-            self.pause_selected = (self.pause_selected + 1) % len(
-                PAUSE_MENU_OPTIONS
-            )
-        elif event.key == pygame.K_RETURN:
-            self._select_pause_option()
-        elif event.key == pygame.K_ESCAPE:
-            # ESC while paused resumes, mirroring how ESC opened the
-            # pause menu in the first place.
-            self.state.phase = ScreenTypes.PLAYING
-
-    def _handle_end_screen_input(self, event: pygame.event.Event) -> None:
-        """Handle input on the Game Over / Victory screens.
-        Both screens just wait for the player to acknowledge the
-        result before moving on to name entry.
-        """
-        if event.key in (pygame.K_RETURN, pygame.K_SPACE):
-            self.name_buffer = ""
-            self.state.phase = ScreenTypes.ENTER_NAME
-
-    def _handle_enter_name_input(self, event: pygame.event.Event) -> None:
-        """Handle typing a name to save on the highscore list."""
-        if event.key == pygame.K_RETURN:
-            if self.name_buffer.strip():
-                self.highscores.add(self.name_buffer, self.state.player.score)
-                self.highscores.save()
-                self.menu_selected = 0
-                self.state.phase = ScreenTypes.MENU
-        elif event.key == pygame.K_BACKSPACE:
-            self.name_buffer = self.name_buffer[:-1]
-        elif event.key == pygame.K_ESCAPE:
-            # Let the player skip saving instead of forcing a name.
-            self.menu_selected = 0
-            self.state.phase = ScreenTypes.MENU
-        else:
-            char = event.unicode
-            is_allowed = char.isalnum() or char == " "
-            if char and is_allowed:
-                self.name_buffer += char
+        self.menu_selected = menu_index
+        self.pause_selected = pause_index
 
     def _draw_menu(self) -> None:
         """Draw the main menu and its four selectable options."""
@@ -326,7 +159,7 @@ class Application:
         # Blinking cursor so an empty/unchanged text box doesn't look frozen.
         cursor = "_" if pygame.time.get_ticks() % 1000 < 500 else " "
         name_surface = self.small_font.render(
-            f"{self.name_buffer}{cursor}", True, YELLOW
+            f"{self.state.name_player}{cursor}", True, YELLOW
         )
         name_rect = name_surface.get_rect(
             center=(self.surface.get_width() // 2, 345)
@@ -362,7 +195,7 @@ class Application:
         )
         self.surface.blit(hint_surface, hint_rect)
 
-    def _draw(self) -> None:
+    def draw(self) -> None:
         """Draw the screen that matches the current menu phase."""
         if self.state.phase is ScreenTypes.MENU:
             self._draw_menu()
@@ -429,17 +262,3 @@ class Application:
         self.surface.fill(BLACK)
         # Draw your maze, pellets, player, ghosts, etc. here.
         self._draw_hud()
-
-
-if __name__ == "__main__":
-    pygame.init()
-    config = Config()
-    highscores = HighscoreStore(HIGHSCORE_FILENAME)
-    state = GameState(config)
-
-    app = Application(
-        config,
-        highscores,
-        state,
-    )
-    app.run()
