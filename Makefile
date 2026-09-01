@@ -15,6 +15,7 @@ uv:
 
 install: uv
 	uv sync
+	uv pip install ./mazegenerator-2.0.1-py3-none-any.whl
 	$(MAKE) env
 
 env:
