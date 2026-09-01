@@ -21,6 +21,8 @@ class Display:
         self,
         highscores: HighscoreStore,
         state: GameState,
+        menu_index: int,
+        pause_index: int
     ) -> None:
         self.highscores = highscores
         self.state = state
@@ -28,9 +30,8 @@ class Display:
         pygame.display.set_caption("Pac-Man")
         self.big_font = pygame.font.Font(None, 64)
         self.small_font = pygame.font.Font(None, 36)
-        self.menu_selected = 0
-        self.pause_selected = 0
-        self.name_buffer = ""
+        self.menu_selected = menu_index
+        self.pause_selected = pause_index
 
     def _draw_menu(self) -> None:
         """Draw the main menu and its four selectable options."""
@@ -158,7 +159,7 @@ class Display:
         # Blinking cursor so an empty/unchanged text box doesn't look frozen.
         cursor = "_" if pygame.time.get_ticks() % 1000 < 500 else " "
         name_surface = self.small_font.render(
-            f"{self.name_buffer}{cursor}", True, YELLOW
+            f"{self.state.name_player}{cursor}", True, YELLOW
         )
         name_rect = name_surface.get_rect(
             center=(self.surface.get_width() // 2, 345)
