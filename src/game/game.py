@@ -47,7 +47,7 @@ class Game:
                 case ScreenTypes.PAUSED:
                     self._handle_pause_keys(event)
                 case ScreenTypes.INSTRUCTIONS | ScreenTypes.HIGH_SCORES | ScreenTypes.VICTORY | ScreenTypes.GAME_OVER:
-                    self._handle_back_only(event)
+                    self._handle_back_keys(event)
                 case ScreenTypes.END_OF_GAME:
                     self._handle_name_entry(event)
 
@@ -135,6 +135,32 @@ class Game:
                 self.state.handle_pause()
             else:
                 self.state.phase = ScreenTypes.MENU
+
+    def _handle_back_keys(self, event: pygame.event.Event) -> None:
+        if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
+            if self.state.phase in (ScreenTypes.GAME_OVER, ScreenTypes.VICTORY):
+                self.state.phase = ScreenTypes.END_OF_GAME
+            else:
+                self.state.phase = ScreenTypes.MENU
+
+    def _handle_name_entry(self, event: pygame.event.Event) -> None:
+        """Handle typing a name to save on the highscore list."""
+        if event.key == pygame.K_RETURN:
+            if self.state.name_player.strip():
+                self.highscores.add(self.state.name_player, self.state.player.score)
+                self.highscores.save()
+                self.state.phase = ScreenTypes.MENU
+
+        elif event.key == pygame.K_BACKSPACE:
+            self.state.name_player = self.state.name_player[:-1]
+
+        elif event.key == pygame.K_ESCAPE:
+            self.state.phase = ScreenTypes.MENU
+
+        else:
+            char = event.unicode
+            if char and char.isprintable() and len(self.state.name_player) < 15:
+                self.state.name_player += char
 
 
     def render(self) -> None:
