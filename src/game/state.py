@@ -39,6 +39,7 @@ class GameState:
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
         self.fruit_timer: float = 0.0
+        self.name_player = ""
 
     def start_new_game(self) -> None:
         """Start a new game, resetting the player and loading level 1."""
@@ -85,6 +86,7 @@ class GameState:
             self.phase = ScreenTypes.PAUSED
         elif self.phase == ScreenTypes.PAUSED:
             self.phase = ScreenTypes.PLAYING
+
 
     def _create_ghosts(self):
         self.ghosts = []
