@@ -26,9 +26,9 @@ class Game:
         pygame.init()
         self.highscores = HighscoreStore(self.config.highscore_filename)
         self.state = GameState(self.config)
-        self.display = Display(self.highscores, self.state)
         self.menu_index = 0
         self.pause_index = 0
+        self.display = Display(self.highscores, self.state, self.menu_index, self.pause_index)
         self.running = True
 
 
