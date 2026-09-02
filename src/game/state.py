@@ -1,19 +1,17 @@
-from entities.player import Player
-from score.store import ScoringSystem
-from entities.ghost import GHOST_NAMES_COLORS, GhostState
-from entities.ghost import Ghost
 from typing import List
-from entities.palletfield import PelletField, build_pellet_field
-from maze.maze_adapter import Maze
+from src.entities.player import Player
+from src.score.store import ScoringSystem
+from src.entities.ghost import GHOST_NAMES_COLORS, GhostState
+from src.entities.ghost import Ghost
+from src.entities.palletfield import PelletField, build_pellet_field
 from src.entities.entity import Direction
-from src.maze.maze_adapter import MazeAdapter
-from config.config import Config
+from src.config.config import Config
 from src.constants import FRIGHTENED_DURATION
 from src.maze.maze import Maze
 from src.maze.maze_adapter import MazeAdapter
-from score.highscore import HighscoreStore
+from src.score.highscore import HighscoreStore
+from src.game.cheat import CheatMode
 from enum import Enum
-from cheat import CheatMode
 
 
 class ScreenTypes(Enum):
@@ -43,6 +41,7 @@ class GameState:
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
         self.fruit_timer: float = 0.0
+        self.level_time_remained = float(config.level_max_time)
         self.cheat = CheatMode()
         self.name_player = ""
 
@@ -66,6 +65,12 @@ class GameState:
 
     def update(self, dt: float) -> None:
         """Update the game for one frame."""
+        if self.phase != ScreenTypes.PLAYING:
+            return
+
+        self.level_time_remained -= dt
+        if self.level_time_remained <= 0:
+            self.restart_current_level()
 
         player_cell = (self.player.col, self.player.row)
         if self.cheat.enabled and self.cheat.speed_boost:
@@ -73,12 +78,13 @@ class GameState:
         else:
             speed_mult = 1.0
         self.player.update(self.maze, dt, speed_multiplier=speed_mult)
+        player_cell = (self.player.col, self.player.row)
         if self.pellets.eat_pacgum(player_cell):
             self.scoring.award_pacgum(self.player)
         elif self.pellets.eat_super_pacgum(player_cell):
             self.scoring.award_super_pacgum(self.player)
             for ghost in self.ghosts:
-                ghost.frighten(duration=5.0)
+                ghost.frighten(duration=FRIGHTENED_DURATION)
         if self.fruit_cell is not None:
             if player_cell == self.fruit_cell:
                 display_level = self.current_level_index + 1
@@ -95,6 +101,7 @@ class GameState:
                     if not (self.cheat.enabled and self.cheat.invincible):
                         self.player.lose_life()
                         self.restart_current_level()
+
 
     def handle_player_direction(self, direction: Direction) -> None:
         self.player.next_direction = direction
@@ -155,6 +162,8 @@ class GameState:
             exclude=occupied_cells,
             max_pacgums=self.config.pacgum,
         )
+        self.level_time_remained = float(self.config.level_max_time)
+
 
     def advance_level(self) -> None:
         self.current_level_index += 1
