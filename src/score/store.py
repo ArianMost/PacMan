@@ -1,5 +1,5 @@
-from entities.player import Player
-from config.config import Config
+from src.entities.player import Player
+from src.config.config import Config
 
 
 class ScoringSystem:

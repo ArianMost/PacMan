@@ -1,6 +1,6 @@
 import pygame
-from game.state import GameState, ScreenTypes
-from score.highscore import HighscoreStore
+from src.game.state import GameState, ScreenTypes
+from src.score.highscore import HighscoreStore
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
