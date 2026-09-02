@@ -1,9 +1,10 @@
 import pygame
 from src.config.config import Config
+from src.constants import MAIN_MENU_OPTIONS
 from src.entities.entity import Direction
 from src.game.state import GameState, ScreenTypes
 from src.score.highscore import HighscoreStore
-from src.ui.display import HIGHSCORE_FILENAME, MAIN_MENU_OPTIONS, Display
+from src.ui.display import Display
 
 
 DIRECTION_KEY = {
@@ -18,7 +19,7 @@ DIRECTION_KEY = {
 }
 
 FPS = 60
-HIGHSCORE_FILENAME = "highscore.json"
+
 
 class Game:
     def __init__(self, config: Config) -> None:
@@ -37,7 +38,7 @@ class Game:
         clock = pygame.time.Clock()
 
         # The loop runs as long as the state is not phase.QUIT
-        while self.state.phase is not ScreenTypes.QUIT:
+        while self.running and self.state.phase is not ScreenTypes.QUIT:
             dt = clock.tick(FPS) / 1000.0
             self._handle_events()
             if self.state.phase is ScreenTypes.PLAYING:
@@ -47,7 +48,7 @@ class Game:
         pygame.quit()
 
 
-    def handle_events(self) -> None:
+    def _handle_events(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -176,6 +177,7 @@ class Game:
                 self.state.name_player += char
 
 if __name__ == "__main__":
+    HIGHSCORE_FILENAME = "highscore.json"
     pygame.init()
     config = Config()
     highscores = HighscoreStore(HIGHSCORE_FILENAME)
