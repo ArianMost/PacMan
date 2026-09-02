@@ -1,6 +1,7 @@
 import pygame
 from game.state import GameState, ScreenTypes
 from score.highscore import HighscoreStore
+from src.constants import MAIN_MENU_OPTIONS, PAUSE_MENU_OPTIONS
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -11,9 +12,6 @@ GREEN = (60, 220, 90)
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
-
-MAIN_MENU_OPTIONS = ["Start Game", "View Highscores", "Instructions", "Exit"]
-PAUSE_MENU_OPTIONS = ["Resume", "Return to Main Menu"]
 
 
 class Display:
