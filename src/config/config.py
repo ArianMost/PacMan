@@ -12,19 +12,30 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "seed": 42,
     "level_max_time": 90,
     "cell_size": 24,
-    "level": [
-        {"width": 10, "height": 8},
-        {"width": 11, "height": 9},
-        {"width": 12, "height": 9},
-        {"width": 12, "height": 10},
-        {"width": 13, "height": 10},
-        {"width": 13, "height": 11},
-        {"width": 14, "height": 11},
-        {"width": 14, "height": 12},
-        {"width": 15, "height": 12},
-        {"width": 16, "height": 13},
-    ],
+    "levels": [
+        {
+        "level_number": 1,
+        "width": 30,
+        "height": 23,
+        "seed": 12,
+        "level_max_time": 65,
+        "map_filename": "inc/maps/maze-1.txt",
+        "bonus_fruit_type": "Cherry",
+        "points_per_bonus_fruit": 200
+        },
+        {
+        "level_number": 2,
+        "width": 14,
+        "height": 10,
+        "map_filename": "inc/maps/maze.txt",
+        "level_max_time": 90,
+        "bonus_fruit_type":"Strawberry",
+        "points_per_bonus_fruit": 300,
+        "walls_color": "#1e2ac9"
+        },
+    ]
 }
+
 
 @dataclass
 class LevelConfig:
