@@ -1,6 +1,6 @@
 import pygame
-from game.state import GameState, ScreenTypes
-from score.highscore import HighscoreStore
+from src.game.state import GameState, ScreenTypes
+from src.score.highscore import HighscoreStore
 from src.constants import MAIN_MENU_OPTIONS, PAUSE_MENU_OPTIONS
 
 BLACK = (0, 0, 0)
@@ -30,6 +30,7 @@ class Display:
         self.small_font = pygame.font.Font(None, 36)
         self.menu_selected = menu_index
         self.pause_selected = pause_index
+        self.ghost_images = {}
 
     def _draw_menu(self) -> None:
         """Draw the main menu and its four selectable options."""
@@ -193,10 +194,24 @@ class Display:
         )
         self.surface.blit(hint_surface, hint_rect)
 
+    def _draw_waiting_to_start(self) -> None:
+        """Draw the frozen game with a prompt to start."""
+        self._draw_game()  # Draw the maze and entities in the background
+        
+        # Add a dark translucent overlay so text is easier to read
+        overlay = pygame.Surface(self.surface.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 150))
+        self.surface.blit(overlay, (0, 0))
+        
+        self._draw_title("GET READY", y=250)
+        self._draw_lines(["Press SPACE to start", "Press ESC for menu"], start_y=320)
+
     def draw(self) -> None:
         """Draw the screen that matches the current menu phase."""
         if self.state.phase is ScreenTypes.MENU:
             self._draw_menu()
+        elif self.state.phase is ScreenTypes.WAITING_TO_START:
+            self._draw_waiting_to_start()
         elif self.state.phase is ScreenTypes.INSTRUCTIONS:
             self._draw_instructions()
         elif self.state.phase is ScreenTypes.HIGH_SCORES:
@@ -248,7 +263,7 @@ class Display:
         )
         self.surface.blit(level_surface, level_rect)
         time_rect = time_surface.get_rect(
-            top_right=(
+            topright=(
                 self.surface.get_width() - 20,
                 20,
             )
@@ -256,7 +271,119 @@ class Display:
         self.surface.blit(time_surface, time_rect)
 
     def _draw_game(self) -> None:
-        """Draw the game and the HUD."""
+        """Draw the maze using bitmask wall lines, pellets, entities, and HUD."""
         self.surface.fill(BLACK)
-        # Draw your maze, pellets, player, ghosts, etc. here.
+
+        if hasattr(self.state, "maze") and self.state.maze:
+            maze = self.state.maze
+            grid = getattr(maze, "grid", getattr(maze, "maze", None))
+            
+            if grid:
+                rows = maze.rows if hasattr(maze, "rows") else len(grid)
+                cols = maze.cols if hasattr(maze, "cols") else len(grid[0])
+                
+                hud_space = 80
+                available_width = WINDOW_WIDTH - 40
+                available_height = WINDOW_HEIGHT - hud_space - 20
+                
+                cell_size_x = available_width // cols
+                cell_size_y = available_height // rows
+                cell_size = max(16, min(cell_size_x, cell_size_y))
+                
+                maze_pixel_width = cols * cell_size
+                maze_pixel_height = rows * cell_size
+                offset_x = (WINDOW_WIDTH - maze_pixel_width) // 2
+                offset_y = hud_space + (available_height - maze_pixel_height) // 2
+
+                # 1. Draw Maze Walls via Bitmask Lines (or full border if fallback)
+                wall_color = (30, 30, 200)
+                
+                # Draw a clean outer boundary around the whole maze first
+                pygame.draw.rect(self.surface, wall_color, (offset_x, offset_y, maze_pixel_width, maze_pixel_height), 3)
+
+                for row_idx, row in enumerate(grid):
+                    for col_idx, cell_value in enumerate(row):
+                        x = offset_x + col_idx * cell_size
+                        y = offset_y + row_idx * cell_size
+
+                        # Draw individual internal wall segments based on bitmask bits
+                        wall_thickness = max(2, cell_size // 8)
+                        if cell_value & 1:  # UP
+                            pygame.draw.line(self.surface, wall_color, (x, y), (x + cell_size, y), wall_thickness)
+                        if cell_value & 2:  # RIGHT
+                            pygame.draw.line(self.surface, wall_color, (x + cell_size, y), (x + cell_size, y + cell_size), wall_thickness)
+                        if cell_value & 4:  # DOWN
+                            pygame.draw.line(self.surface, wall_color, (x, y + cell_size), (x + cell_size, y + cell_size), wall_thickness)
+                        if cell_value & 8:  # LEFT
+                            pygame.draw.line(self.surface, wall_color, (x, y), (x, y + cell_size), wall_thickness)
+
+                # 2. Draw Pellets
+                if hasattr(self.state, "pellets") and self.state.pellets:
+                    if hasattr(self.state.pellets, "pacgums"):
+                        for pcol, prow in self.state.pellets.pacgums:
+                            px = offset_x + pcol * cell_size + cell_size // 2
+                            py = offset_y + prow * cell_size + cell_size // 2
+                            pygame.draw.circle(self.surface, (255, 180, 180), (px, py), max(2, cell_size // 6))
+
+                # 3. Draw Pac-Man Player
+                if hasattr(self.state, "player") and self.state.player:
+                    px, py = self.state.player.pixel_position(cell_size)
+                    center_x = int(offset_x + px + cell_size // 2)
+                    center_y = int(offset_y + py + cell_size // 2)
+                    pygame.draw.circle(self.surface, YELLOW, (center_x, center_y), cell_size // 2 - 2)
+
+                if hasattr(self.state, "ghosts") and self.state.ghosts:
+                    for ghost in self.state.ghosts:
+                        gx, gy = ghost.pixel_position(cell_size)
+                        
+                        ghost_name = getattr(ghost, "name", "blinky").lower()
+                        
+                        # Determine direction suffix based on ghost.direction
+                        dir_str = "left" # default fallback
+                        if hasattr(ghost, "direction"):
+                            # Assuming ghost.direction is a Direction enum (UP, DOWN, LEFT, RIGHT, NONE)
+                            d_name = ghost.direction.name.lower()
+                            if d_name in ("up", "down", "left", "right"):
+                                dir_str = d_name
+                        
+                        # Unique cache key for each ghost name + direction combination
+                        cache_key = (ghost_name, dir_str)
+                        
+                        if cache_key not in self.ghost_images:
+                            paths = [
+                                f"src/images/{ghost_name}_{dir_str}.png",
+                                f"src/images/{ghost_name}.png",
+                                "src/images/ghost.png"
+                            ]
+                            loaded_img = None
+                            for path in paths:
+                                try:
+                                    loaded_img = pygame.image.load(path).convert_alpha()
+                                    break
+                                except Exception:
+                                    continue
+                            self.ghost_images[cache_key] = loaded_img
+                        
+                        img = self.ghost_images.get(cache_key)
+                        
+                        if img:
+                            ghost_width = int(cell_size * 0.75)
+                            ghost_height = int(cell_size * 1.25)
+                            scaled_img = pygame.transform.scale(img, (ghost_width, ghost_height))
+                            
+                            draw_x = int(offset_x + gx + (cell_size - ghost_width) // 2)
+                            draw_y = int(offset_y + gy)
+                            self.surface.blit(scaled_img, (draw_x, draw_y))
+                        else:
+                            # Fallback to the circle if all images are missing
+                            draw_x = int(offset_x + gx)
+                            draw_y = int(offset_y + gy)
+                            g_center_x = draw_x + cell_size // 2
+                            g_center_y = draw_y + cell_size // 2
+                            ghost_color = getattr(ghost, "color", (255, 0, 0))
+                            if isinstance(ghost_color, str) and ghost_color.startswith("#"):
+                                ghost_color = tuple(int(ghost_color[i:i+2], 16) for i in (1, 3, 5))
+                            pygame.draw.circle(self.surface, ghost_color, (g_center_x, g_center_y), cell_size // 2 - 2)
+        # 5. Draw the HUD on top
+        # 5. Draw the HUD on top
         self._draw_hud()
