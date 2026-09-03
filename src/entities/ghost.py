@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import Tuple, Any
 from typing import ClassVar
-from entities.entity import Entity
-from entities.entity import Direction
+from src.entities.entity import Entity
+from src.entities.entity import Direction
 import random
 from src.maze.maze_adapter import Maze
 

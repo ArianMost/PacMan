@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from constants import OPEN
+from src.constants import OPEN
 
 
 @dataclass

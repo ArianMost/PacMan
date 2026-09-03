@@ -13,6 +13,8 @@ from src.score.highscore import HighscoreStore
 from src.game.cheat import CheatMode
 from enum import Enum
 
+# Assuming you saved cheat.py in the src/game/ folder next to state.py
+from src.game.cheat import CheatMode
 
 class ScreenTypes(Enum):
     MENU = "menu"
