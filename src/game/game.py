@@ -182,6 +182,16 @@ class Game:
             if char and char.isprintable() and len(self.state.name_player) < 15:
                 self.state.name_player += char
 
+    def _handle_waiting_keys(self, event: pygame.event.Event) -> None:
+        """Handle input when waiting at the start of a level before ghosts release."""
+        if event.key in (pygame.K_RETURN, pygame.K_SPACE) or event.key in DIRECTION_KEY:
+            # Transition from waiting to active gameplay
+            self.state.phase = ScreenTypes.PLAYING
+            if event.key in DIRECTION_KEY:
+                self.state.handle_player_direction(DIRECTION_KEY[event.key])
+        elif event.key == pygame.K_ESCAPE:
+            self.state.phase = ScreenTypes.MENU
+
 def main(config_path: str) -> int:
     config = load_config(config_path)
     HIGHSCORE_FILENAME = "highscore.json"

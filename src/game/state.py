@@ -86,6 +86,9 @@ class GameState:
             self.scoring.award_super_pacgum(self.player)
             for ghost in self.ghosts:
                 ghost.frighten(duration=FRIGHTENED_DURATION)
+        if self.pellets.remaining() == 0:
+            self.advance_level()
+            return
         if self.fruit_cell is not None:
             if player_cell == self.fruit_cell:
                 display_level = self.current_level_index + 1
@@ -101,7 +104,10 @@ class GameState:
                 elif ghost.state is GhostState.CHASE:
                     if not (self.cheat.enabled and self.cheat.invincible):
                         self.player.lose_life()
-                        self.restart_current_level()
+                        if self.player.lives <= 0:
+                            self.phase = ScreenTypes.GAME_OVER
+                        else:
+                            self.restart_current_level()
 
 
     def handle_player_direction(self, direction: Direction) -> None:
@@ -135,6 +141,7 @@ class GameState:
             self.ghosts.append(ghost)
 
     def _load_level(self, level_index: int) -> None:
+        print("LOADING LEVEL:", level_index + 1)
         levels = self.config.levels
         level_config = levels[level_index % len(levels)]
         perfect = False
@@ -168,6 +175,7 @@ class GameState:
 
 
     def advance_level(self) -> None:
+        print("ADVANCING LEVEL")
         self.current_level_index += 1
         if self.current_level_index >= len(self.config.levels):
             self.phase = ScreenTypes.VICTORY
@@ -176,5 +184,9 @@ class GameState:
         self.phase = ScreenTypes.WAITING_TO_START
 
     def restart_current_level(self) -> None:
-        self._load_level(self.current_level_index)
+        # Reset Pac-Man and ghosts, but keep the pellets already eaten
+        self.player.respawn(*self.maze.player_sp)
+        for ghost in self.ghosts:
+            ghost.set_home(ghost.col, ghost.row)
+        self.level_time_remained = float(self.config.level_max_time)
         self.phase = ScreenTypes.WAITING_TO_START

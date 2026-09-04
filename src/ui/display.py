@@ -2,6 +2,8 @@ import pygame
 from src.game.state import GameState, ScreenTypes
 from src.score.highscore import HighscoreStore
 from src.constants import MAIN_MENU_OPTIONS, PAUSE_MENU_OPTIONS
+from src.entities.ghost import GhostState
+from src.entities.entity import Direction
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -218,6 +220,8 @@ class Display:
             self._draw_highscores()
         elif self.state.phase is ScreenTypes.PLAYING:
             self._draw_game()
+        elif self.state.phase is ScreenTypes.WAITING_TO_START:
+            self._draw_waiting_to_start()
         elif self.state.phase is ScreenTypes.PAUSED:
             self._draw_pause_menu()
         elif self.state.phase is ScreenTypes.GAME_OVER:
@@ -269,6 +273,7 @@ class Display:
             )
         )
         self.surface.blit(time_surface, time_rect)
+
 
     def _draw_game(self) -> None:
         """Draw the maze using bitmask wall lines, pellets, entities, and HUD."""
@@ -325,36 +330,149 @@ class Display:
                             py = offset_y + prow * cell_size + cell_size // 2
                             pygame.draw.circle(self.surface, (255, 180, 180), (px, py), max(2, cell_size // 6))
 
-                # 3. Draw Pac-Man Player
+                # 3. Draw Super Gums (Power Pellets) with a flashing effect
+                super_gums = self.state.pellets.super_pacgums
+                current_time = pygame.time.get_ticks()
+                if (current_time // 250) % 2 == 0:
+                    for scol, srow in super_gums:
+                        px = offset_x + scol * cell_size + cell_size // 2
+                        py = offset_y + srow * cell_size + cell_size // 2
+
+                        pygame.draw.circle(
+                            self.surface,
+                            (255, 184, 255),
+                            (px, py),
+                            max(4, cell_size // 3)
+                        )
+
+                # 3. Draw Pac-Man Player with Slow Death and Eating Animations
                 if hasattr(self.state, "player") and self.state.player:
                     px, py = self.state.player.pixel_position(cell_size)
-                    center_x = int(offset_x + px + cell_size // 2)
-                    center_y = int(offset_y + py + cell_size // 2)
-                    pygame.draw.circle(self.surface, YELLOW, (center_x, center_y), cell_size // 2 - 2)
+                    draw_x = int(offset_x + px)
+                    draw_y = int(offset_y + py)
+                    if not hasattr(self, "pacman_images"):
+                        self.pacman_images = {}
 
+                    current_time = pygame.time.get_ticks()
+                    # Determine direction suffix
+                    dir_str = "right"
+                    player_dir = getattr(self.state.player, "direction", getattr(self.state.player, "current_direction", None))
+                    if player_dir:
+                        if hasattr(player_dir, "name"):
+                            d_name = player_dir.name.lower()
+                        elif isinstance(player_dir, str):
+                            d_name = player_dir.lower()
+                        else:
+                            d_name = "right"
+                        if d_name in ("up", "down", "left", "right"):
+                            dir_str = d_name
+
+                    # Check if player is dying
+                    is_dying = getattr(self.state, "is_dying", False)
+                    
+                    if is_dying:
+                        # Slower death animation (changes frame every 400ms)
+                        anim_frame = (current_time // 400) % 3 + 1
+                        action_str = f"die{anim_frame}"
+                    elif self.state.player.direction is Direction.NONE:
+                        action_str = "start"
+                    else:
+                        # Slower eating animation (every 250ms)
+                        anim_frame = (current_time // 250) % 3 + 1
+                        action_str = f"eat{anim_frame}"
+
+                    cache_key = ("pac_man", dir_str, action_str)
+
+                    if cache_key not in self.pacman_images:
+                        if action_str == "start":
+                            paths = [
+                                "images/pac_man/pac_man_start.png",
+                                "src/images/pac_man/pac_man_start.png",
+                                "src/images/pac_man.png",
+                            ]
+                        else:
+                            paths = [
+                                f"images/pac_man/pac_man_{dir_str}_{action_str}.png",
+                                f"src/images/pac_man/pac_man_{dir_str}_{action_str}.png",
+                                f"images/pac_man/pac_man_{action_str}.png",
+                                "src/images/pac_man.png",
+                            ]
+
+                        loaded_img = None
+                        for path in paths:
+                            try:
+                                loaded_img = pygame.image.load(path).convert_alpha()
+                                break
+                            except Exception:
+                                continue
+                        self.pacman_images[cache_key] = loaded_img
+
+                    img = self.pacman_images.get(cache_key)
+
+                    if img:
+                        # Force a uniform size for all Pac-Man frames so they match perfectly
+                        p_width = int(cell_size * 1.1)
+                        p_height = int(cell_size * 1.1)
+
+                        scaled_img = pygame.transform.scale(img, (p_width, p_height))
+                        p_draw_x = draw_x + (cell_size - p_width) // 2
+                        p_draw_y = draw_y + (cell_size - p_height) // 2
+                        self.surface.blit(scaled_img, (p_draw_x, p_draw_y))
+                    else:
+                        center_x = draw_x + cell_size // 2
+                        center_y = draw_y + cell_size // 2
+                        pygame.draw.circle(self.surface, YELLOW, (center_x, center_y), cell_size // 2 - 2)
+                # Draw the ghosts
                 if hasattr(self.state, "ghosts") and self.state.ghosts:
+                    current_time = pygame.time.get_ticks()
                     for ghost in self.state.ghosts:
                         gx, gy = ghost.pixel_position(cell_size)
 
                         ghost_name = getattr(ghost, "name", "blinky").lower()
 
-                        # Determine direction suffix based on ghost.direction
-                        dir_str = "left" # default fallback
-                        if hasattr(ghost, "direction"):
-                            # Assuming ghost.direction is a Direction enum (UP, DOWN, LEFT, RIGHT, NONE)
+                        # 1. Determine state suffix based on ghost.state
+                        state_suffix = ""
+                        if hasattr(ghost, "state"):
+                            if ghost.state == GhostState.FRIGHTENED:
+                                state_suffix = "frightened"
+                                frightened_timer = getattr(ghost, "frightened_timer", 2.0)
+                                if frightened_timer < 2.0:
+                                    if (current_time // 300) % 2 == 0:
+                                        state_suffix = "frightened_flash"
+                            elif ghost.state == GhostState.EATEN:
+                                state_suffix = "eyes"
+
+                        # 2. Determine direction suffix
+                        dir_str = "left"  # default fallback
+                        if hasattr(ghost, "direction") and ghost.direction:
                             d_name = ghost.direction.name.lower()
                             if d_name in ("up", "down", "left", "right"):
                                 dir_str = d_name
 
-                        # Unique cache key for each ghost name + direction combination
-                        cache_key = (ghost_name, dir_str)
+                        # Unique cache key incorporating the current state
+                        cache_key = (ghost_name, state_suffix, dir_str)
 
                         if cache_key not in self.ghost_images:
-                            paths = [
-                                f"src/images/{ghost_name}_{dir_str}.png",
-                                f"src/images/{ghost_name}.png",
-                                "src/images/ghost.png"
-                            ]
+                            paths = []
+                            if state_suffix == "frightened":
+                                paths = [
+                                    f"src/images/frightened_{dir_str}.png",
+                                    f"src/images/{ghost_name}_frightened.png",
+                                    "src/images/frightened.png"
+                                ]
+                            elif state_suffix == "eyes":
+                                paths = [
+                                    f"src/images/eyes_{dir_str}.png",
+                                    f"src/images/{ghost_name}_eyes_{dir_str}.png",
+                                    "src/images/eyes.png"
+                                ]
+                            else:
+                                paths = [
+                                    f"src/images/{ghost_name}_{dir_str}.png",
+                                    f"src/images/{ghost_name}.png",
+                                    "src/images/ghost.png"
+                                ]
+
                             loaded_img = None
                             for path in paths:
                                 try:
@@ -380,10 +498,15 @@ class Display:
                             draw_y = int(offset_y + gy)
                             g_center_x = draw_x + cell_size // 2
                             g_center_y = draw_y + cell_size // 2
-                            ghost_color = getattr(ghost, "color", (255, 0, 0))
-                            if isinstance(ghost_color, str) and ghost_color.startswith("#"):
-                                ghost_color = tuple(int(ghost_color[i:i+2], 16) for i in (1, 3, 5))
+
+                            if hasattr(ghost, "state") and ghost.state == GhostState.FRIGHTENED:
+                                ghost_color = (0, 0, 255)
+                            elif hasattr(ghost, "state") and ghost.state == GhostState.EATEN:
+                                ghost_color = (150, 150, 150)
+                            else:
+                                ghost_color = getattr(ghost, "color", (255, 0, 0))
+                                if isinstance(ghost_color, str) and ghost_color.startswith("#"):
+                                    ghost_color = tuple(int(ghost_color[i:i+2], 16) for i in (1, 3, 5))
+
                             pygame.draw.circle(self.surface, ghost_color, (g_center_x, g_center_y), cell_size // 2 - 2)
-        # 5. Draw the HUD on top
-        # 5. Draw the HUD on top
         self._draw_hud()
