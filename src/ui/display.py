@@ -197,12 +197,12 @@ class Display:
     def _draw_waiting_to_start(self) -> None:
         """Draw the frozen game with a prompt to start."""
         self._draw_game()  # Draw the maze and entities in the background
-        
+
         # Add a dark translucent overlay so text is easier to read
         overlay = pygame.Surface(self.surface.get_size(), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 150))
         self.surface.blit(overlay, (0, 0))
-        
+
         self._draw_title("GET READY", y=250)
         self._draw_lines(["Press SPACE to start", "Press ESC for menu"], start_y=320)
 
@@ -210,8 +210,8 @@ class Display:
         """Draw the screen that matches the current menu phase."""
         if self.state.phase is ScreenTypes.MENU:
             self._draw_menu()
-        elif self.state.phase is ScreenTypes.WAITING_TO_START:
-            self._draw_waiting_to_start()
+        # elif self.state.phase is ScreenTypes.WAITING_TO_START:
+        #     self._draw_waiting_to_start()
         elif self.state.phase is ScreenTypes.INSTRUCTIONS:
             self._draw_instructions()
         elif self.state.phase is ScreenTypes.HIGH_SCORES:
@@ -232,7 +232,7 @@ class Display:
         score_text = f"Score: {self.state.player.score}"
         lives_text = f"Lives: {self.state.player.lives}"
         level_text = f"Level: {self.state.current_level_index + 1}"
-        time_text = f"Time: {int(self.state.level_time_remaining)}"
+        time_text = f"Time: {int(self.state.level_time_remained)}"
         score_surface = self.small_font.render(
             score_text,
             True,
@@ -277,19 +277,19 @@ class Display:
         if hasattr(self.state, "maze") and self.state.maze:
             maze = self.state.maze
             grid = getattr(maze, "grid", getattr(maze, "maze", None))
-            
+
             if grid:
                 rows = maze.rows if hasattr(maze, "rows") else len(grid)
                 cols = maze.cols if hasattr(maze, "cols") else len(grid[0])
-                
+
                 hud_space = 80
                 available_width = WINDOW_WIDTH - 40
                 available_height = WINDOW_HEIGHT - hud_space - 20
-                
+
                 cell_size_x = available_width // cols
                 cell_size_y = available_height // rows
                 cell_size = max(16, min(cell_size_x, cell_size_y))
-                
+
                 maze_pixel_width = cols * cell_size
                 maze_pixel_height = rows * cell_size
                 offset_x = (WINDOW_WIDTH - maze_pixel_width) // 2
@@ -297,7 +297,7 @@ class Display:
 
                 # 1. Draw Maze Walls via Bitmask Lines (or full border if fallback)
                 wall_color = (30, 30, 200)
-                
+
                 # Draw a clean outer boundary around the whole maze first
                 pygame.draw.rect(self.surface, wall_color, (offset_x, offset_y, maze_pixel_width, maze_pixel_height), 3)
 
@@ -335,9 +335,9 @@ class Display:
                 if hasattr(self.state, "ghosts") and self.state.ghosts:
                     for ghost in self.state.ghosts:
                         gx, gy = ghost.pixel_position(cell_size)
-                        
+
                         ghost_name = getattr(ghost, "name", "blinky").lower()
-                        
+
                         # Determine direction suffix based on ghost.direction
                         dir_str = "left" # default fallback
                         if hasattr(ghost, "direction"):
@@ -345,10 +345,10 @@ class Display:
                             d_name = ghost.direction.name.lower()
                             if d_name in ("up", "down", "left", "right"):
                                 dir_str = d_name
-                        
+
                         # Unique cache key for each ghost name + direction combination
                         cache_key = (ghost_name, dir_str)
-                        
+
                         if cache_key not in self.ghost_images:
                             paths = [
                                 f"src/images/{ghost_name}_{dir_str}.png",
@@ -363,14 +363,14 @@ class Display:
                                 except Exception:
                                     continue
                             self.ghost_images[cache_key] = loaded_img
-                        
+
                         img = self.ghost_images.get(cache_key)
-                        
+
                         if img:
                             ghost_width = int(cell_size * 0.75)
                             ghost_height = int(cell_size * 1.25)
                             scaled_img = pygame.transform.scale(img, (ghost_width, ghost_height))
-                            
+
                             draw_x = int(offset_x + gx + (cell_size - ghost_width) // 2)
                             draw_y = int(offset_y + gy)
                             self.surface.blit(scaled_img, (draw_x, draw_y))

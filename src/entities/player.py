@@ -7,6 +7,7 @@ class Player(Entity):
         self.score = score
         self.col: int = 0
         self.row: int = 0
+        self.speed_cells_per_sec: float = 6.0
 
     def add_score(self, points: int) -> None:
         self.score += points

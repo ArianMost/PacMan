@@ -13,8 +13,6 @@ from src.score.highscore import HighscoreStore
 from src.game.cheat import CheatMode
 from enum import Enum
 
-# Assuming you saved cheat.py in the src/game/ folder next to state.py
-from src.game.cheat import CheatMode
 
 class ScreenTypes(Enum):
     MENU = "menu"
@@ -38,7 +36,7 @@ class GameState:
         self.ghosts: List[Ghost] = []
         self.phase = ScreenTypes.MENU
         self.previous_screen = ScreenTypes.MENU
-        self.maze: Maze = Maze()
+        self.maze: Maze = Maze(grid=[[1]], cols=1, rows=1, ghosts_sp=[(0, 0)], player_sp=(0, 0))
         self.maze_adapter = MazeAdapter()
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None

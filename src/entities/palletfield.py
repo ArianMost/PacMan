@@ -1,24 +1,16 @@
+from dataclasses import dataclass, field
 import random
 from typing import Set, Tuple
 from src.maze.maze import Maze
 
-
+@dataclass
 class PelletField:
     """
     Manages all the consumable pellets (dots) in the maze.
     Uses sets of (col, row) tuples for ultra-fast collision detection.
     """
-
-    def __init__(self, pacgums: set[tuple[int, int]], super_pacgums: set[tuple[int, int]]) -> None:
-        """
-        Initializes the field with starting pellet coordinates.
-
-        Args:
-            pacgums: A set of (col, row) coordinates for regular dots.
-            super_pacgums: A set of (col, row) coordinates for power pellets.
-        """
-        self.pacgums: Set[Tuple[int, int]] = pacgums
-        self.super_pacgums: Set[Tuple[int, int]] = super_pacgums
+    pacgums: Set[Tuple[int, int]] = field(default_factory=set)
+    super_pacgums: Set[Tuple[int, int]] = field(default_factory=set)
 
     def remaining(self) -> int:
         """

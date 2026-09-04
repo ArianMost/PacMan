@@ -34,7 +34,7 @@ class ScoringSystem:
 
     def award_super_pacgum(self, player: Player) -> int:
         """
-        Award points for eating a super-pacgum and reset the chain.    
+        Award points for eating a super-pacgum and reset the chain.
         Args:
             player (Player): The player entity to award points to.
 
