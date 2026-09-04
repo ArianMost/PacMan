@@ -102,7 +102,8 @@ class Entity:
             wall = 4
         else:  # LEFT
             wall = 8
-        return (maze.maze[y][x] & wall) == 0
+        grid = getattr(maze, "maze", getattr(maze, "grid", getattr(maze, "cells", maze)))
+        return (grid[y][x] & wall) == 0
 
     def available_directions(self, maze: Maze) -> list[Direction]:
         """Return all directions that are currently open in the maze."""

@@ -43,8 +43,10 @@ class Game:
             self._handle_events()
             if self.state.phase is ScreenTypes.PLAYING:
                 self.state.update(dt)
+            self.display.menu_selected = self.menu_index
             self.display.draw()
             pygame.display.flip()
+            clock.tick(60)
         pygame.quit()
 
 
@@ -62,6 +64,8 @@ class Game:
                     self._handle_menu_keys(event)
                 case ScreenTypes.PLAYING:
                     self._handle_play_keys(event)
+                case ScreenTypes.WAITING_TO_START:
+                    self._handle_waiting_keys(event)
                 case ScreenTypes.PAUSED:
                     self._handle_pause_keys(event)
                 case ScreenTypes.INSTRUCTIONS | ScreenTypes.HIGH_SCORES | ScreenTypes.VICTORY | ScreenTypes.GAME_OVER:
@@ -88,6 +92,7 @@ class Game:
             item = MAIN_MENU_OPTIONS[self.menu_index]
             if item == "Start Game":
                 self.state.start_new_game()
+                self.state.phase = ScreenTypes.WAITING_TO_START
             elif item == "View Highscores":
                 self.state.previous_screen = ScreenTypes.MENU
                 self.state.phase = ScreenTypes.HIGH_SCORES
@@ -175,6 +180,14 @@ class Game:
             char = event.unicode
             if char and char.isprintable() and len(self.state.name_player) < 15:
                 self.state.name_player += char
+
+    def _handle_waiting_keys(self, event: pygame.event.Event) -> None:
+        """Handle keyboard input while waiting to start."""
+        if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+            self.state.phase = ScreenTypes.PLAYING
+
+        elif event.key == pygame.K_ESCAPE:
+            self.state.phase = ScreenTypes.MENU
 
 if __name__ == "__main__":
     HIGHSCORE_FILENAME = "highscore.json"

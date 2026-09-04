@@ -71,7 +71,7 @@ def build_pellet_field(
     """Place super-pacgums on the four maze corners and pacgums on the
     remaining open corridors, capped at ``max_pacgums``."""
 
-    pf = PelletField()
+    pf = PelletField(set(), set())
     open_cells = [
         (col, row)
         for row in range(maze.rows)

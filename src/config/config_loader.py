@@ -71,6 +71,7 @@ def _validate_positive_int(val: str, default_val: int, label: str):
         return num
     except (TypeError, ValueError):
         print(f"[config] warning: invalid '{label} : {val}', using the default value '{default_val}'", file=sys.stderr)
+        # return default_val
 
 
 def _validate_nonnegative_int(val: str, default_val: int, label: str):
@@ -81,6 +82,7 @@ def _validate_nonnegative_int(val: str, default_val: int, label: str):
         return num
     except (TypeError, ValueError):
         print(f"[config] warning: invalid '{label} : {val}', using the default value '{default_val}'", file=sys.stderr)
+        # return default_val
 
 
 def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
@@ -165,14 +167,14 @@ def load_config(config_file: str) -> Config:
     )
 
     return Config(
-        highscore,
-        levels,
-        lives,
-        pacgum,
-        points_per_pacgum,
-        points_per_super_pacgum,
-        points_per_ghost,
-        seed,
-        level_max_time,
-        cell_size
+        highscore_filename=highscore,
+        levels=levels,
+        lives=lives,
+        pacgum=pacgum,
+        points_per_pacgum=points_per_pacgum,
+        points_per_super_pacgum=points_per_super_pacgum,
+        points_per_ghost=points_per_ghost,
+        seed=seed,
+        level_max_time=level_max_time,
+        cell_size=cell_size
     )

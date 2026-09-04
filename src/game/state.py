@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+from enum import Enum
+>>>>>>> 2973399 (ui)
 from typing import List
 from src.entities.player import Player
 from src.score.store import ScoringSystem
@@ -9,11 +13,15 @@ from src.config.config import Config
 from src.constants import FRIGHTENED_DURATION
 from src.maze.maze import Maze
 from src.maze.maze_adapter import MazeAdapter
+<<<<<<< HEAD
 from src.score.highscore import HighscoreStore
 from src.game.cheat import CheatMode
 from enum import Enum
 
 # Assuming you saved cheat.py in the src/game/ folder next to state.py
+=======
+from src.maze.maze_generator import ExternalMazeGenerator
+>>>>>>> 2973399 (ui)
 from src.game.cheat import CheatMode
 
 class ScreenTypes(Enum):
@@ -26,6 +34,7 @@ class ScreenTypes(Enum):
     GAME_OVER = "game_over"
     VICTORY = "victory"
     QUIT = "quit"
+    WAITING_TO_START = "waiting_to_start"
 
 
 class GameState:
@@ -38,8 +47,8 @@ class GameState:
         self.ghosts: List[Ghost] = []
         self.phase = ScreenTypes.MENU
         self.previous_screen = ScreenTypes.MENU
-        self.maze: Maze = Maze()
-        self.maze_adapter = MazeAdapter()
+        self.maze: Maze = Maze(grid=[], cols=0, rows=0, ghosts_sp=[], player_sp=(0, 0))
+        self.maze_adapter = MazeAdapter(ExternalMazeGenerator())
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
         self.fruit_timer: float = 0.0
@@ -51,7 +60,7 @@ class GameState:
         """Start a new game, resetting the player and loading level 1."""
         self.player = Player(self.config.lives)
         self.current_level_index = 0
-        self.phase = ScreenTypes.PLAYING
+        self.phase = ScreenTypes.WAITING_TO_START
         self._load_level(self.current_level_index)
         self.highscores.load()
 
@@ -145,6 +154,7 @@ class GameState:
         else:
             seed = self.config.seed + level_index
 
+        self.level_time_remaining = level_config.level_max_time
         self.maze = self.maze_adapter.build(
             level_config.width, level_config.height, seed, perfect
         )
@@ -173,6 +183,8 @@ class GameState:
             self.phase = ScreenTypes.VICTORY
             return
         self._load_level(self.current_level_index)
+        self.phase = ScreenTypes.WAITING_TO_START
 
     def restart_current_level(self) -> None:
         self._load_level(self.current_level_index)
+        self.phase = ScreenTypes.WAITING_TO_START

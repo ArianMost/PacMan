@@ -30,14 +30,15 @@ DEFAULT_CONFIG: dict[str, Any] = {
 class LevelConfig:
     """Dimensions and rules for a single level."""
 
-    level_number: int
-    width: int
-    height: int
-    seed: int
-    level_max_time: int
-    map_filename: str
-    bonus_fruit_type: str
-    points_per_bonus_fruit: int
+    level_number: int = 1
+    width: int = 14
+    height: int = 10
+    seed: int = 0
+    level_max_time: int = 90
+    map_filename: str = ""
+    bonus_fruit_type: str = "cherry"
+    points_per_bonus_fruit: int = 100
+    walls_color: str = "#1e2ac9"
 
 @dataclass
 class Config:
@@ -51,3 +52,8 @@ class Config:
     level_max_time: int = DEFAULT_CONFIG["level_max_time"]
     cell_size: int = DEFAULT_CONFIG["cell_size"]
     levels: list[LevelConfig] = field(default_factory=list)
+
+    def __post_init__(self):
+        # Force cell_size to default if it ever somehow gets set to None
+        if self.cell_size is None:
+            self.cell_size = DEFAULT_CONFIG["cell_size"]

@@ -35,10 +35,16 @@ class MazeAdapter:
     def _get_ghosts_sp(
         grid: list[list[int]], cols: int, rows: int
     ) -> list[tuple[int, int]]:
-        maze_corners = [(1, 1), (cols - 2, 1), (1, rows - 2), (cols - 2, rows - 2)]
+        # maze_corners = [(1, 1), (cols - 2, 1), (1, rows - 2), (cols - 2, rows - 2)]
+        # return [
+        #     MazeAdapter._find_nearest_open(grid, cols, rows, col, row)
+        #     for col, row in maze_corners
+        # ]
         return [
-            MazeAdapter._find_nearest_open(grid, cols, rows, col, row)
-            for col, row in maze_corners
+            (0, 0),                           # Top-Left
+            (cols - 1, 0),                    # Top-Right
+            (0, rows - 1),                    # Bottom-Left
+            (cols - 1, rows - 1)              # Bottom-Right
         ]
 
     @staticmethod

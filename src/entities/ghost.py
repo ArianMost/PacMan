@@ -24,17 +24,18 @@ Cell = tuple[int, int]
 
 
 class Ghost(Entity):
-    def __init__(self, name: str, color: Tuple[int, int, int]) -> None:
+    def __init__(self, col: int, row: int, name: str, color: Tuple[int, int, int]) -> None:
+        super().__init__(col=col, row=row)
         self.name: str = name
         self.color: Tuple[int, int, int] = color
-        self.home_col: int = 0
-        self.home_row: int = 0
+        self.home_col: int = col
+        self.home_row: int = row
         self.state: GhostState = GhostState.CHASE
         self.frightened_timer: float = 0.0
         self.respawn_timer: float = 0.0
 
     _CHASE_SPEED_MULT: ClassVar[float] = 1.0
-    _FRIGHТENED_SPEED_MULT: ClassVar[float] = 0.5
+    _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.5
     _EATEN_SPEED_MULT: ClassVar[float] = 1.8
 
     def set_home(self, col: int, row: int) -> None:

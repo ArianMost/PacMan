@@ -1,25 +1,26 @@
 import sys
 import pygame
-from src.config.config import Config
+import json
+from src.config.config import Config, LevelConfig
 from src.score.highscore import HighscoreStore
 from src.game.state import GameState
 from src.ui.display import Display
+from src.game.game import Game
 
+from src.config.config_loader import load_config
+from src.game.game import Game 
 
 def main() -> None:
     """CLI entry point for Pac-Man."""
-    # 1. Initialize Pygame
-    pygame.init()
-    # 2. Load the configuration and highscores
-    config = Config()
-    highscores = HighscoreStore(filename="highscores.json")
-    highscores.load()
-    # 3. Create the single source of truth (GameState)
-    state = GameState(config)
-    # 4. Create and run the Application (UI)
-    app = Display(highscores, state, 0, 0)
-    app.run()
 
+    # Get the filename from the terminal, or use an empty string
+    config_file = sys.argv[1] if len(sys.argv) > 1 else ""
+
+    # Let your amazing custom loader do all the hard work!
+    config = load_config(config_file)
+
+    app = Game(config)
+    app.run()
 
 if __name__ == "__main__":
     main()
