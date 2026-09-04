@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-from enum import Enum
->>>>>>> 2973399 (ui)
 from typing import List
 from src.entities.player import Player
 from src.score.store import ScoringSystem
@@ -13,16 +9,10 @@ from src.config.config import Config
 from src.constants import FRIGHTENED_DURATION
 from src.maze.maze import Maze
 from src.maze.maze_adapter import MazeAdapter
-<<<<<<< HEAD
 from src.score.highscore import HighscoreStore
 from src.game.cheat import CheatMode
 from enum import Enum
 
-# Assuming you saved cheat.py in the src/game/ folder next to state.py
-=======
-from src.maze.maze_generator import ExternalMazeGenerator
->>>>>>> 2973399 (ui)
-from src.game.cheat import CheatMode
 
 class ScreenTypes(Enum):
     MENU = "menu"
@@ -47,8 +37,8 @@ class GameState:
         self.ghosts: List[Ghost] = []
         self.phase = ScreenTypes.MENU
         self.previous_screen = ScreenTypes.MENU
-        self.maze: Maze = Maze(grid=[], cols=0, rows=0, ghosts_sp=[], player_sp=(0, 0))
-        self.maze_adapter = MazeAdapter(ExternalMazeGenerator())
+        self.maze: Maze = Maze(grid=[[1]], cols=1, rows=1, ghosts_sp=[(0, 0)], player_sp=(0, 0))
+        self.maze_adapter = MazeAdapter()
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
         self.fruit_timer: float = 0.0

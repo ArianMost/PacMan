@@ -1,5 +1,6 @@
 import pygame
 from src.config.config import Config
+from src.config.config_loader import load_config
 from src.constants import MAIN_MENU_OPTIONS
 from src.entities.entity import Direction
 from src.game.state import GameState, ScreenTypes
@@ -181,18 +182,10 @@ class Game:
             if char and char.isprintable() and len(self.state.name_player) < 15:
                 self.state.name_player += char
 
-    def _handle_waiting_keys(self, event: pygame.event.Event) -> None:
-        """Handle keyboard input while waiting to start."""
-        if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
-            self.state.phase = ScreenTypes.PLAYING
-
-        elif event.key == pygame.K_ESCAPE:
-            self.state.phase = ScreenTypes.MENU
-
-if __name__ == "__main__":
+def main(config_path: str) -> int:
+    config = load_config(config_path)
     HIGHSCORE_FILENAME = "highscore.json"
     pygame.init()
-    config = Config()
     highscores = HighscoreStore(HIGHSCORE_FILENAME)
     state = GameState(config)
 

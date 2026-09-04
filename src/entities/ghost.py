@@ -34,7 +34,8 @@ class Ghost(Entity):
         self.frightened_timer: float = 0.0
         self.respawn_timer: float = 0.0
 
-    _CHASE_SPEED_MULT: ClassVar[float] = 1.0
+    _CHASE_SPEED_MULT: ClassVar[float] = 0.5
+
     _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.5
     _EATEN_SPEED_MULT: ClassVar[float] = 1.8
 

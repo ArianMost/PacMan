@@ -1,33 +1,51 @@
 import sys
 from typing import Deque
 from collections import deque
-from src.constants import OPEN
 from src.maze.maze import Maze
 from src.maze.maze_generator import MazeGenerator
+from mazegenerator.mazegenerator import MazeGenerator as ExternalMazeGenerator
+
+
+class ExternalGeneratorAdapter:
+    """Adapts the external maze generator to our MazeGenerator protocol."""
+
+    def generate(
+        self,
+        width: int,
+        height: int,
+        seed: int,
+        perfect: bool,
+    ) -> list[list[int]]:
+        generator = ExternalMazeGenerator(
+            size=(width, height),
+            perfect=perfect,
+            seed=seed,
+        )
+        return generator.maze
 
 
 class MazeAdapter:
     """Adapts whatever generator is configured to the game's needs."""
 
-    def __init__(self, generator: MazeGenerator) -> None:
-        self._generator = generator
+    def __init__(self, generator: MazeGenerator | None = None) -> None:
+        self._generator = generator or ExternalGeneratorAdapter()
 
     def build(self, width: int, height: int, seed: int, perfect: bool = False) -> Maze:
         try:
             grid = self._generator.generate(width, height, seed, perfect)
             if not grid or not grid[0]:
                 raise ValueError("empty maze grid")
-            if not any(OPEN in row for row in grid):
+            if not any(cell != 15 for row in grid for cell in row):
                 raise ValueError("maze grid has no valid path")
         except Exception as e:
             print(f"[maze] external generator failed: {e}; ", file=sys.stderr)
             sys.exit(1)
 
         return Maze(
-            grid=grid, 
-            cols=len(grid[0]), 
-            rows=len(grid), 
-            ghosts_sp=self._get_ghosts_sp(grid, len(grid[0]), len(grid)), 
+            grid=grid,
+            cols=len(grid[0]),
+            rows=len(grid),
+            ghosts_sp=self._get_ghosts_sp(grid, len(grid[0]), len(grid)),
             player_sp=self._get_player_sp(grid, len(grid[0]), len(grid))
         )
 
@@ -62,7 +80,7 @@ class MazeAdapter:
         start_row: int,
     ) -> tuple[int, int]:
         """Find the nearest open cell to a starting position using BFS.
-        
+
         The search checks cells in order of their grid distance from the
         starting position, considering four directions (up, down, left, and right).
         """
@@ -78,7 +96,7 @@ class MazeAdapter:
             start_row = rows - 1
         if start_row < 0:
             start_row = 0
-                
+
         start = (start_col, start_row)
         queue.append(start)
         visited.add(start)
@@ -86,7 +104,7 @@ class MazeAdapter:
         while queue:
             col, row = queue.popleft()
 
-            if grid[row][col] == OPEN:
+            if grid[row][col] != 15:
                 return col, row
 
             for distance_col, distance_row in (
