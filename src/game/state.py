@@ -12,6 +12,7 @@ from src.maze.maze_adapter import MazeAdapter
 from src.score.highscore import HighscoreStore
 from src.game.cheat import CheatMode
 from enum import Enum
+import random
 
 
 class ScreenTypes(Enum):
@@ -89,11 +90,30 @@ class GameState:
         if self.pellets.remaining() == 0:
             self.advance_level()
             return
+        if not hasattr(self, "fruit_spawned_this_level"):
+            self.fruit_spawned_this_level = False
+        ## Spawn fruit only once when a specific threshold of pacgums is reached
+        if self.fruit_cell is None and not self.fruit_spawned_this_level:
+            if len(self.pellets.pacgums) > 0 and len(self.pellets.pacgums) <= 20: 
+                open_cells = [
+                    (c, r) for r in range(self.maze.rows) for c in range(self.maze.cols)
+                    if self.maze.is_walkable(c, r)
+                ]
+                if open_cells:
+                    self.fruit_cell = random.choice(open_cells)
+                    self.fruit_timer = 10.0  # Fruit stays for 10 seconds
+                    self.fruit_spawned_this_level = True
+
+        # Countdown fruit timer or handle eating collision (WITHOUT premature return)
         if self.fruit_cell is not None:
-            if player_cell == self.fruit_cell:
+            self.fruit_timer -= dt
+            if self.fruit_timer <= 0:
+                self.fruit_cell = None
+            elif player_cell == self.fruit_cell:
                 display_level = self.current_level_index + 1
                 self.scoring.award_fruit(self.player, display_level)
                 self.fruit_cell = None
+
         for ghost in self.ghosts:
             if not (self.cheat.enabled and self.cheat.ghosts_frozen):
                 ghost.update_ai(self.maze, dt, player_cell)
@@ -172,7 +192,9 @@ class GameState:
             max_pacgums=self.config.pacgum,
         )
         self.level_time_remained = float(self.config.level_max_time)
-
+        # Reset fruit state for the new level
+        self.fruit_cell = None
+        self.fruit_spawned_this_level = False
 
     def advance_level(self) -> None:
         print("ADVANCING LEVEL")

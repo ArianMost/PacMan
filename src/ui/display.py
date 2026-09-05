@@ -369,7 +369,6 @@ class Display:
 
                     # Check if player is dying
                     is_dying = getattr(self.state, "is_dying", False)
-                    
                     if is_dying:
                         # Slower death animation (changes frame every 400ms)
                         anim_frame = (current_time // 400) % 3 + 1
@@ -411,8 +410,8 @@ class Display:
 
                     if img:
                         # Force a uniform size for all Pac-Man frames so they match perfectly
-                        p_width = int(cell_size * 1.1)
-                        p_height = int(cell_size * 1.1)
+                        p_width = int(cell_size * 1)
+                        p_height = int(cell_size * 1)
 
                         scaled_img = pygame.transform.scale(img, (p_width, p_height))
                         p_draw_x = draw_x + (cell_size - p_width) // 2
@@ -509,4 +508,40 @@ class Display:
                                     ghost_color = tuple(int(ghost_color[i:i+2], 16) for i in (1, 3, 5))
 
                             pygame.draw.circle(self.surface, ghost_color, (g_center_x, g_center_y), cell_size // 2 - 2)
+                # 4. Draw Bonus Fruit (if active in current level state)
+                if self.state.fruit_cell is not None:
+                    # Get the fruit type from your level configuration file via state
+                    level_cfg = self.state.config.levels[self.state.current_level_index]
+                    fruit_name = str(getattr(level_cfg, "bonus_fruit_type", "Cherry")).lower()
+                    # Clean up fruit name to match file name format (e.g., "galaxian flagship" -> "galaxian_flagship")
+                    fruit_filename = fruit_name.replace(" ", "_")
+                    fcol, frow = self.state.fruit_cell
+                    fx = offset_x + fcol * cell_size + cell_size // 2
+                    fy = offset_y + frow * cell_size + cell_size // 2
+                    cache_key = ("fruit", fruit_filename)
+                    if cache_key not in self.ghost_images:
+                        paths = [
+                            f"src/images/fruits/{fruit_filename}.png",
+                            f"images/fruits/{fruit_filename}.png",
+                            f"src/images/{fruit_filename}.png"
+                        ]
+                        loaded_fruit = None
+                        for path in paths:
+                            try:
+                                loaded_fruit = pygame.image.load(path).convert_alpha()
+                                break
+                            except Exception:
+                                continue
+                        self.ghost_images[cache_key] = loaded_fruit
+                    f_img = self.ghost_images.get(cache_key)
+                    if f_img:
+                        f_width = int(cell_size * 1.0)
+                        f_height = int(cell_size * 1.0)
+                        scaled_fruit = pygame.transform.scale(f_img, (f_width, f_height))
+                        f_draw_x = fx - f_width // 2
+                        f_draw_y = fy - f_height // 2
+                        self.surface.blit(scaled_fruit, (f_draw_x, f_draw_y))
+                    else:
+                        # Fallback graphical representation if image file is missing
+                        pygame.draw.circle(self.surface, (255, 100, 0), (fx, fy), cell_size // 2 - 2)
         self._draw_hud()
