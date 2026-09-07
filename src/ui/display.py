@@ -279,269 +279,278 @@ class Display:
         """Draw the maze using bitmask wall lines, pellets, entities, and HUD."""
         self.surface.fill(BLACK)
 
-        if hasattr(self.state, "maze") and self.state.maze:
-            maze = self.state.maze
-            grid = getattr(maze, "grid", getattr(maze, "maze", None))
+        if not hasattr(self.state, "maze") or not self.state.maze:
+            self._draw_hud()
+            return
 
-            if grid:
-                rows = maze.rows if hasattr(maze, "rows") else len(grid)
-                cols = maze.cols if hasattr(maze, "cols") else len(grid[0])
+        maze = self.state.maze
+        grid = getattr(maze, "grid", getattr(maze, "maze", None))
+        if not grid:
+            self._draw_hud()
+            return
 
-                hud_space = 80
-                available_width = WINDOW_WIDTH - 40
-                available_height = WINDOW_HEIGHT - hud_space - 20
+        rows = maze.rows if hasattr(maze, "rows") else len(grid)
+        cols = maze.cols if hasattr(maze, "cols") else len(grid[0])
 
-                cell_size_x = available_width // cols
-                cell_size_y = available_height // rows
-                cell_size = max(16, min(cell_size_x, cell_size_y))
+        hud_space = 80
+        available_width = WINDOW_WIDTH - 40
+        available_height = WINDOW_HEIGHT - hud_space - 20
 
-                maze_pixel_width = cols * cell_size
-                maze_pixel_height = rows * cell_size
-                offset_x = (WINDOW_WIDTH - maze_pixel_width) // 2
-                offset_y = hud_space + (available_height - maze_pixel_height) // 2
+        cell_size_x = available_width // cols
+        cell_size_y = available_height // rows
+        cell_size = max(16, min(cell_size_x, cell_size_y))
 
-                # 1. Draw Maze Walls via Bitmask Lines (or full border if fallback)
-                wall_color = (30, 30, 200)
+        maze_pixel_width = cols * cell_size
+        maze_pixel_height = rows * cell_size
+        offset_x = (WINDOW_WIDTH - maze_pixel_width) // 2
+        offset_y = hud_space + (available_height - maze_pixel_height) // 2
 
-                # Draw a clean outer boundary around the whole maze first
-                pygame.draw.rect(self.surface, wall_color, (offset_x, offset_y, maze_pixel_width, maze_pixel_height), 3)
+        # Draw components modularly
+        self._draw_maze_walls(grid, rows, cols, offset_x, offset_y, cell_size, maze_pixel_width, maze_pixel_height)
+        self._draw_pellets(offset_x, offset_y, cell_size)
+        self._draw_super_gums(offset_x, offset_y, cell_size)
+        self._draw_pacman(offset_x, offset_y, cell_size)
+        self._draw_ghosts(offset_x, offset_y, cell_size)
+        self._draw_fruit(offset_x, offset_y, cell_size)
 
-                for row_idx, row in enumerate(grid):
-                    for col_idx, cell_value in enumerate(row):
-                        x = offset_x + col_idx * cell_size
-                        y = offset_y + row_idx * cell_size
+        # Draw the HUD on top
+        self._draw_hud()
 
-                        # Draw individual internal wall segments based on bitmask bits
-                        wall_thickness = max(2, cell_size // 8)
-                        if cell_value & 1:  # UP
-                            pygame.draw.line(self.surface, wall_color, (x, y), (x + cell_size, y), wall_thickness)
-                        if cell_value & 2:  # RIGHT
-                            pygame.draw.line(self.surface, wall_color, (x + cell_size, y), (x + cell_size, y + cell_size), wall_thickness)
-                        if cell_value & 4:  # DOWN
-                            pygame.draw.line(self.surface, wall_color, (x, y + cell_size), (x + cell_size, y + cell_size), wall_thickness)
-                        if cell_value & 8:  # LEFT
-                            pygame.draw.line(self.surface, wall_color, (x, y), (x, y + cell_size), wall_thickness)
+    def _draw_maze_walls(self, grid, rows, cols, offset_x, offset_y, cell_size, maze_pixel_width, maze_pixel_height) -> None:
+        """Draw maze walls via bitmask lines and outer boundary."""
+        wall_color = (30, 30, 200)
+        pygame.draw.rect(self.surface, wall_color, (offset_x, offset_y, maze_pixel_width, maze_pixel_height), 3)
 
-                # 2. Draw Pellets
-                if hasattr(self.state, "pellets") and self.state.pellets:
-                    if hasattr(self.state.pellets, "pacgums"):
-                        for pcol, prow in self.state.pellets.pacgums:
-                            px = offset_x + pcol * cell_size + cell_size // 2
-                            py = offset_y + prow * cell_size + cell_size // 2
-                            pygame.draw.circle(self.surface, (255, 180, 180), (px, py), max(2, cell_size // 6))
+        for row_idx, row in enumerate(grid):
+            for col_idx, cell_value in enumerate(row):
+                x = offset_x + col_idx * cell_size
+                y = offset_y + row_idx * cell_size
 
-                # 3. Draw Super Gums (Power Pellets) with a flashing effect
-                super_gums = self.state.pellets.super_pacgums
-                current_time = pygame.time.get_ticks()
-                if (current_time // 250) % 2 == 0:
-                    for scol, srow in super_gums:
-                        px = offset_x + scol * cell_size + cell_size // 2
-                        py = offset_y + srow * cell_size + cell_size // 2
+                wall_thickness = max(2, cell_size // 8)
+                if cell_value & 1:  # UP
+                    pygame.draw.line(self.surface, wall_color, (x, y), (x + cell_size, y), wall_thickness)
+                if cell_value & 2:  # RIGHT
+                    pygame.draw.line(self.surface, wall_color, (x + cell_size, y), (x + cell_size, y + cell_size), wall_thickness)
+                if cell_value & 4:  # DOWN
+                    pygame.draw.line(self.surface, wall_color, (x, y + cell_size), (x + cell_size, y + cell_size), wall_thickness)
+                if cell_value & 8:  # LEFT
+                    pygame.draw.line(self.surface, wall_color, (x, y), (x, y + cell_size), wall_thickness)
 
-                        pygame.draw.circle(
-                            self.surface,
-                            (255, 184, 255),
-                            (px, py),
-                            max(4, cell_size // 3)
-                        )
+    def _draw_pellets(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+        """Draw standard pacgums."""
+        if hasattr(self.state, "pellets") and self.state.pellets:
+            if hasattr(self.state.pellets, "pacgums"):
+                for pcol, prow in self.state.pellets.pacgums:
+                    px = offset_x + pcol * cell_size + cell_size // 2
+                    py = offset_y + prow * cell_size + cell_size // 2
+                    pygame.draw.circle(self.surface, (255, 180, 180), (px, py), max(2, cell_size // 6))
 
-                # 3. Draw Pac-Man Player with Slow Death and Eating Animations
-                if hasattr(self.state, "player") and self.state.player:
-                    px, py = self.state.player.pixel_position(cell_size)
-                    draw_x = int(offset_x + px)
-                    draw_y = int(offset_y + py)
-                    if not hasattr(self, "pacman_images"):
-                        self.pacman_images = {}
+    def _draw_super_gums(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+        """Draw flashing power pellets."""
+        if hasattr(self.state, "pellets") and self.state.pellets and hasattr(self.state.pellets, "super_pacgums"):
+            super_gums = self.state.pellets.super_pacgums
+            current_time = pygame.time.get_ticks()
+            if (current_time // 250) % 2 == 0:
+                for scol, srow in super_gums:
+                    px = offset_x + scol * cell_size + cell_size // 2
+                    py = offset_y + srow * cell_size + cell_size // 2
+                    pygame.draw.circle(self.surface, (255, 184, 255), (px, py), max(4, cell_size // 3))
 
-                    current_time = pygame.time.get_ticks()
-                    # Determine direction suffix
-                    dir_str = "right"
-                    player_dir = getattr(self.state.player, "direction", getattr(self.state.player, "current_direction", None))
-                    if player_dir:
-                        if hasattr(player_dir, "name"):
-                            d_name = player_dir.name.lower()
-                        elif isinstance(player_dir, str):
-                            d_name = player_dir.lower()
-                        else:
-                            d_name = "right"
-                        if d_name in ("up", "down", "left", "right"):
-                            dir_str = d_name
+    def _draw_pacman(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+        """Draw Pac-Man player with directional and animated sprites."""
+        if not (hasattr(self.state, "player") and self.state.player):
+            return
 
-                    # Check if player is dying
-                    is_dying = getattr(self.state, "is_dying", False)
-                    if is_dying:
-                        # Slower death animation (changes frame every 400ms)
-                        anim_frame = (current_time // 400) % 3 + 1
-                        action_str = f"die{anim_frame}"
-                    elif self.state.player.direction is Direction.NONE:
-                        action_str = "start"
-                    else:
-                        # Slower eating animation (every 250ms)
-                        anim_frame = (current_time // 250) % 3 + 1
-                        action_str = f"eat{anim_frame}"
+        px, py = self.state.player.pixel_position(cell_size)
+        draw_x = int(offset_x + px)
+        draw_y = int(offset_y + py)
+        
+        if not hasattr(self, "pacman_images"):
+            self.pacman_images = {}
 
-                    cache_key = ("pac_man", dir_str, action_str)
+        current_time = pygame.time.get_ticks()
+        
+        dir_str = "right"
+        player_dir = getattr(self.state.player, "direction", getattr(self.state.player, "current_direction", None))
+        if player_dir:
+            if hasattr(player_dir, "name"):
+                d_name = player_dir.name.lower()
+            elif isinstance(player_dir, str):
+                d_name = player_dir.lower()
+            else:
+                d_name = "right"
+            if d_name in ("up", "down", "left", "right"):
+                dir_str = d_name
 
-                    if cache_key not in self.pacman_images:
-                        if action_str == "start":
-                            paths = [
-                                "images/pac_man/pac_man_start.png",
-                                "src/images/pac_man/pac_man_start.png",
-                                "src/images/pac_man.png",
-                            ]
-                        else:
-                            paths = [
-                                f"images/pac_man/pac_man_{dir_str}_{action_str}.png",
-                                f"src/images/pac_man/pac_man_{dir_str}_{action_str}.png",
-                                f"images/pac_man/pac_man_{action_str}.png",
-                                "src/images/pac_man.png",
-                            ]
+        is_dying = getattr(self.state, "is_dying", False)
+        if is_dying:
+            anim_frame = (current_time // 400) % 3 + 1
+            action_str = f"die{anim_frame}"
+        elif self.state.player.direction is Direction.NONE:
+            action_str = "start"
+        else:
+            anim_frame = (current_time // 250) % 3 + 1
+            action_str = f"eat{anim_frame}"
 
-                        loaded_img = None
-                        for path in paths:
-                            try:
-                                loaded_img = pygame.image.load(path).convert_alpha()
-                                break
-                            except Exception:
-                                continue
-                        self.pacman_images[cache_key] = loaded_img
+        cache_key = ("pac_man", dir_str, action_str)
 
-                    img = self.pacman_images.get(cache_key)
+        if cache_key not in self.pacman_images:
+            if action_str == "start":
+                paths = [
+                    "images/pac_man/pac_man_start.png",
+                    "src/images/pac_man/pac_man_start.png",
+                    "src/images/pac_man.png",
+                ]
+            else:
+                paths = [
+                    f"images/pac_man/pac_man_{dir_str}_{action_str}.png",
+                    f"src/images/pac_man/pac_man_{dir_str}_{action_str}.png",
+                    f"images/pac_man/pac_man_{action_str}.png",
+                    "src/images/pac_man.png",
+                ]
 
-                    if img:
-                        # Force a uniform size for all Pac-Man frames so they match perfectly
-                        p_width = int(cell_size * 1)
-                        p_height = int(cell_size * 1)
+            loaded_img = None
+            for path in paths:
+                try:
+                    loaded_img = pygame.image.load(path).convert_alpha()
+                    break
+                except Exception:
+                    continue
+            self.pacman_images[cache_key] = loaded_img
 
-                        scaled_img = pygame.transform.scale(img, (p_width, p_height))
-                        p_draw_x = draw_x + (cell_size - p_width) // 2
-                        p_draw_y = draw_y + (cell_size - p_height) // 2
-                        self.surface.blit(scaled_img, (p_draw_x, p_draw_y))
-                    else:
-                        center_x = draw_x + cell_size // 2
-                        center_y = draw_y + cell_size // 2
-                        pygame.draw.circle(self.surface, YELLOW, (center_x, center_y), cell_size // 2 - 2)
-                # Draw the ghosts
-                if hasattr(self.state, "ghosts") and self.state.ghosts:
-                    current_time = pygame.time.get_ticks()
-                    for ghost in self.state.ghosts:
-                        gx, gy = ghost.pixel_position(cell_size)
+        img = self.pacman_images.get(cache_key)
 
-                        ghost_name = getattr(ghost, "name", "blinky").lower()
+        if img:
+            p_width = int(cell_size * 1)
+            p_height = int(cell_size * 1)
+            scaled_img = pygame.transform.scale(img, (p_width, p_height))
+            p_draw_x = draw_x + (cell_size - p_width) // 2
+            p_draw_y = draw_y + (cell_size - p_height) // 2
+            self.surface.blit(scaled_img, (p_draw_x, p_draw_y))
+        else:
+            center_x = draw_x + cell_size // 2
+            center_y = draw_y + cell_size // 2
+            pygame.draw.circle(self.surface, YELLOW, (center_x, center_y), cell_size // 2 - 2)
 
-                        # 1. Determine state suffix based on ghost.state
-                        state_suffix = ""
-                        if hasattr(ghost, "state"):
-                            if ghost.state == GhostState.FRIGHTENED:
-                                state_suffix = "frightened"
-                                frightened_timer = getattr(ghost, "frightened_timer", 2.0)
-                                if frightened_timer < 2.0:
-                                    if (current_time // 300) % 2 == 0:
-                                        state_suffix = "frightened_flash"
-                            elif ghost.state == GhostState.EATEN:
-                                state_suffix = "eyes"
+    def _draw_ghosts(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+        """Draw ghosts with frightened, flashing, eyes, and directional states."""
+        if not (hasattr(self.state, "ghosts") and self.state.ghosts):
+            return
 
-                        # 2. Determine direction suffix
-                        dir_str = "left"  # default fallback
-                        if hasattr(ghost, "direction") and ghost.direction:
-                            d_name = ghost.direction.name.lower()
-                            if d_name in ("up", "down", "left", "right"):
-                                dir_str = d_name
+        current_time = pygame.time.get_ticks()
+        for ghost in self.state.ghosts:
+            gx, gy = ghost.pixel_position(cell_size)
+            ghost_name = getattr(ghost, "name", "blinky").lower()
 
-                        # Unique cache key incorporating the current state
-                        cache_key = (ghost_name, state_suffix, dir_str)
+            state_suffix = ""
+            if hasattr(ghost, "state"):
+                if ghost.state == GhostState.FRIGHTENED:
+                    state_suffix = "frightened"
+                    frightened_timer = getattr(ghost, "frightened_timer", 2.0)
+                    if frightened_timer < 2.0:
+                        if (current_time // 300) % 2 == 0:
+                            state_suffix = "frightened_flash"
+                elif ghost.state == GhostState.EATEN:
+                    state_suffix = "eyes"
 
-                        if cache_key not in self.ghost_images:
-                            paths = []
-                            if state_suffix == "frightened":
-                                paths = [
-                                    f"src/images/frightened_{dir_str}.png",
-                                    f"src/images/{ghost_name}_frightened.png",
-                                    "src/images/frightened.png"
-                                ]
-                            elif state_suffix == "eyes":
-                                paths = [
-                                    f"src/images/eyes_{dir_str}.png",
-                                    f"src/images/{ghost_name}_eyes_{dir_str}.png",
-                                    "src/images/eyes.png"
-                                ]
-                            else:
-                                paths = [
-                                    f"src/images/{ghost_name}_{dir_str}.png",
-                                    f"src/images/{ghost_name}.png",
-                                    "src/images/ghost.png"
-                                ]
+            dir_str = "left"
+            if hasattr(ghost, "direction") and ghost.direction:
+                d_name = ghost.direction.name.lower()
+                if d_name in ("up", "down", "left", "right"):
+                    dir_str = d_name
 
-                            loaded_img = None
-                            for path in paths:
-                                try:
-                                    loaded_img = pygame.image.load(path).convert_alpha()
-                                    break
-                                except Exception:
-                                    continue
-                            self.ghost_images[cache_key] = loaded_img
+            cache_key = (ghost_name, state_suffix, dir_str)
 
-                        img = self.ghost_images.get(cache_key)
+            if cache_key not in self.ghost_images:
+                paths = []
+                if state_suffix == "frightened":
+                    paths = [
+                        f"src/images/frightened_{dir_str}.png",
+                        f"src/images/{ghost_name}_frightened.png",
+                        "src/images/frightened.png"
+                    ]
+                elif state_suffix == "eyes":
+                    paths = [
+                        f"src/images/eyes_{dir_str}.png",
+                        f"src/images/{ghost_name}_eyes_{dir_str}.png",
+                        "src/images/eyes.png"
+                    ]
+                else:
+                    paths = [
+                        f"src/images/{ghost_name}_{dir_str}.png",
+                        f"src/images/{ghost_name}.png",
+                        "src/images/ghost.png"
+                    ]
 
-                        if img:
-                            ghost_width = int(cell_size * 0.75)
-                            ghost_height = int(cell_size * 1.25)
-                            scaled_img = pygame.transform.scale(img, (ghost_width, ghost_height))
+                loaded_img = None
+                for path in paths:
+                    try:
+                        loaded_img = pygame.image.load(path).convert_alpha()
+                        break
+                    except Exception:
+                        continue
+                self.ghost_images[cache_key] = loaded_img
 
-                            draw_x = int(offset_x + gx + (cell_size - ghost_width) // 2)
-                            draw_y = int(offset_y + gy)
-                            self.surface.blit(scaled_img, (draw_x, draw_y))
-                        else:
-                            # Fallback to the circle if all images are missing
-                            draw_x = int(offset_x + gx)
-                            draw_y = int(offset_y + gy)
-                            g_center_x = draw_x + cell_size // 2
-                            g_center_y = draw_y + cell_size // 2
+            img = self.ghost_images.get(cache_key)
 
-                            if hasattr(ghost, "state") and ghost.state == GhostState.FRIGHTENED:
-                                ghost_color = (0, 0, 255)
-                            elif hasattr(ghost, "state") and ghost.state == GhostState.EATEN:
-                                ghost_color = (150, 150, 150)
-                            else:
-                                ghost_color = getattr(ghost, "color", (255, 0, 0))
-                                if isinstance(ghost_color, str) and ghost_color.startswith("#"):
-                                    ghost_color = tuple(int(ghost_color[i:i+2], 16) for i in (1, 3, 5))
+            if img:
+                ghost_width = int(cell_size * 0.75)
+                ghost_height = int(cell_size * 1.25)
+                scaled_img = pygame.transform.scale(img, (ghost_width, ghost_height))
+                draw_x = int(offset_x + gx + (cell_size - ghost_width) // 2)
+                draw_y = int(offset_y + gy)
+                self.surface.blit(scaled_img, (draw_x, draw_y))
+            else:
+                draw_x = int(offset_x + gx)
+                draw_y = int(offset_y + gy)
+                g_center_x = draw_x + cell_size // 2
+                g_center_y = draw_y + cell_size // 2
 
-                            pygame.draw.circle(self.surface, ghost_color, (g_center_x, g_center_y), cell_size // 2 - 2)
-                # 4. Draw Bonus Fruit (if active in current level state)
-                if self.state.fruit_cell is not None:
-                    # Get the fruit type from your level configuration file via state
-                    level_cfg = self.state.config.levels[self.state.current_level_index]
-                    fruit_name = str(getattr(level_cfg, "bonus_fruit_type", "Cherry")).lower()
-                    # Clean up fruit name to match file name format (e.g., "galaxian flagship" -> "galaxian_flagship")
-                    fruit_filename = fruit_name.replace(" ", "_")
-                    fcol, frow = self.state.fruit_cell
-                    fx = offset_x + fcol * cell_size + cell_size // 2
-                    fy = offset_y + frow * cell_size + cell_size // 2
-                    cache_key = ("fruit", fruit_filename)
-                    if cache_key not in self.ghost_images:
-                        paths = [
-                            f"src/images/fruits/{fruit_filename}.png",
-                            f"images/fruits/{fruit_filename}.png",
-                            f"src/images/{fruit_filename}.png"
-                        ]
-                        loaded_fruit = None
-                        for path in paths:
-                            try:
-                                loaded_fruit = pygame.image.load(path).convert_alpha()
-                                break
-                            except Exception:
-                                continue
-                        self.ghost_images[cache_key] = loaded_fruit
-                    f_img = self.ghost_images.get(cache_key)
-                    if f_img:
-                        f_width = int(cell_size * 1.0)
-                        f_height = int(cell_size * 1.0)
-                        scaled_fruit = pygame.transform.scale(f_img, (f_width, f_height))
-                        f_draw_x = fx - f_width // 2
-                        f_draw_y = fy - f_height // 2
-                        self.surface.blit(scaled_fruit, (f_draw_x, f_draw_y))
-                    else:
-                        # Fallback graphical representation if image file is missing
-                        pygame.draw.circle(self.surface, (255, 100, 0), (fx, fy), cell_size // 2 - 2)
+                if hasattr(ghost, "state") and ghost.state == GhostState.FRIGHTENED:
+                    ghost_color = (0, 0, 255)
+                elif hasattr(ghost, "state") and ghost.state == GhostState.EATEN:
+                    ghost_color = (150, 150, 150)
+                else:
+                    ghost_color = getattr(ghost, "color", (255, 0, 0))
+                    if isinstance(ghost_color, str) and ghost_color.startswith("#"):
+                        ghost_color = tuple(int(ghost_color[i:i+2], 16) for i in (1, 3, 5))
+
+                pygame.draw.circle(self.surface, ghost_color, (g_center_x, g_center_y), cell_size // 2 - 2)
+
+    def _draw_fruit(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+        """Draw bonus fruit if active."""
+        if self.state.fruit_cell is not None:
+            level_cfg = self.state.config.levels[self.state.current_level_index]
+            fruit_name = str(getattr(level_cfg, "bonus_fruit_type", "Cherry")).lower()
+            fruit_filename = fruit_name.replace(" ", "_")
+            fcol, frow = self.state.fruit_cell
+            fx = offset_x + fcol * cell_size + cell_size // 2
+            fy = offset_y + frow * cell_size + cell_size // 2
+            cache_key = ("fruit", fruit_filename)
+            
+            if cache_key not in self.ghost_images:
+                paths = [
+                    f"src/images/fruits/{fruit_filename}.png",
+                    f"images/fruits/{fruit_filename}.png",
+                    f"src/images/{fruit_filename}.png"
+                ]
+                loaded_fruit = None
+                for path in paths:
+                    try:
+                        loaded_fruit = pygame.image.load(path).convert_alpha()
+                        break
+                    except Exception:
+                        continue
+                self.ghost_images[cache_key] = loaded_fruit
+                
+            f_img = self.ghost_images.get(cache_key)
+            if f_img:
+                f_width = int(cell_size * 1.0)
+                f_height = int(cell_size * 1.0)
+                scaled_fruit = pygame.transform.scale(f_img, (f_width, f_height))
+                f_draw_x = fx - f_width // 2
+                f_draw_y = fy - f_height // 2
+                self.surface.blit(scaled_fruit, (f_draw_x, f_draw_y))
+            else:
+                pygame.draw.circle(self.surface, (255, 100, 0), (fx, fy), cell_size // 2 - 2)
         self._draw_hud()
