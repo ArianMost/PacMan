@@ -13,6 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.game.game import main  # noqa: E402
 
+from src.config.config_loader import load_config
+from src.game.game import Game 
 
 def _usage_error(message: str) -> int:
     print(f"error: {message}", file=sys.stderr)
@@ -30,6 +32,14 @@ def run() -> int:
 
     return main(config_path)
 
+    # Get the filename from the terminal, or use an empty string
+    config_file = sys.argv[1] if len(sys.argv) > 1 else ""
+
+    # Let your amazing custom loader do all the hard work!
+    config = load_config(config_file)
+
+    app = Game(config)
+    app.run()
 
 if __name__ == "__main__":
     sys.exit(run())

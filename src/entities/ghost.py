@@ -28,8 +28,8 @@ class Ghost(Entity):
         super().__init__(col=col, row=row)
         self.name: str = name
         self.color: Tuple[int, int, int] = color
-        self.home_col: int = 0
-        self.home_row: int = 0
+        self.home_col: int = col
+        self.home_row: int = row
         self.state: GhostState = GhostState.CHASE
         self.frightened_timer: float = 0.0
         self.respawn_timer: float = 0.0
