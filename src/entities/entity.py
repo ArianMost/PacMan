@@ -85,15 +85,18 @@ class Entity:
         return x, y
 
     def can_move(self, maze: Maze, direction: Direction) -> bool:
-        """Check whether the entity can legally move in a given direction.
-        Checks the wall bitmask of the entity's current grid cell in `maze`
-        to determine if passage in `direction` is unobstructed.
-        """
+        """Return True if moving one cell in `direction` is legal."""
+
         if direction is Direction.NONE:
             return False
 
         x = self.col
         y = self.row
+
+        # Never allow an entity to leave the maze.
+        if not (0 <= x + self.direction.dx < maze.cols and 0 <= y + self.direction.dy < maze.rows):
+            return False
+
         if direction is Direction.UP:
             wall = 1
         elif direction is Direction.RIGHT:
@@ -102,35 +105,59 @@ class Entity:
             wall = 4
         else:  # LEFT
             wall = 8
+
         return (maze.grid[y][x] & wall) == 0
 
     def available_directions(self, maze: Maze) -> list[Direction]:
         """Return all directions that are currently open in the maze."""
         return [d for d in _CARDINALS if self.can_move(maze, d)]
 
-    def update(self,
-               maze: Maze,
-               dt: float,
-               speed_multiplier: float = 1.0) -> None:
-        """Move the entity based on its speed,
-        direction, and the maze walls."""
-        if self.direction is Direction.NONE and self.next_direction is not Direction.NONE:
+    def update(
+        self,
+        maze: Maze,
+        dt: float,
+        speed_multiplier: float = 1.0
+    ) -> None:
+        """Move the entity based on its speed, direction, and maze walls."""
+
+        if (
+            self.direction is Direction.NONE
+            and self.next_direction is not Direction.NONE
+        ):
             if self.can_move(maze, self.next_direction):
                 self.direction = self.next_direction
 
         if self.direction is Direction.NONE:
             return
-        self._progress += self.speed_cells_per_sec * speed_multiplier * dt
+
+        self._progress += (
+            self.speed_cells_per_sec
+            * speed_multiplier
+            * dt
+        )
 
         while self._progress >= 1.0:
+
+            # Never enter a blocked/out-of-bounds cell.
+            if not self.can_move(maze, self.direction):
+                self.direction = Direction.NONE
+                self._progress = 0.0
+                break
+
             self._progress -= 1.0
+
             self.col += self.direction.dx
             self.row += self.direction.dy
-            if self.next_direction is not Direction.NONE and (
-                self.next_direction is not self.direction
+
+            # Try requested direction at the new cell.
+            if (
+                self.next_direction is not Direction.NONE
+                and self.next_direction is not self.direction
+                and self.can_move(maze, self.next_direction)
             ):
-                if self.can_move(maze, self.next_direction):
-                    self.direction = self.next_direction
+                self.direction = self.next_direction
+
+            # If we cannot continue in the current direction, stop.
             if not self.can_move(maze, self.direction):
                 self.direction = Direction.NONE
                 self._progress = 0.0
