@@ -28,11 +28,13 @@ class Ghost(Entity):
         super().__init__(col=col, row=row)
         self.name: str = name
         self.color: Tuple[int, int, int] = color
-        self.home_col: int = 0
-        self.home_row: int = 0
+        self.home_col: int = col
+        self.home_row: int = row
         self.state: GhostState = GhostState.CHASE
         self.frightened_timer: float = 0.0
         self.respawn_timer: float = 0.0
+        self.reverse_requested = False
+
 
     _CHASE_SPEED_MULT: ClassVar[float] = 0.5
 
@@ -55,6 +57,7 @@ class Ghost(Entity):
             return
         self.state = GhostState.FRIGHTENED
         self.frightened_timer = duration
+        self.reverse_requested = True
         self.direction = self.direction.opposite()
         self.next_direction = Direction.NONE
 
@@ -133,13 +136,17 @@ class Ghost(Entity):
         self.update(maze, dt, speed_multiplier=self._EATEN_SPEED_MULT)
         if (self.col, self.row) == home and self.respawn_timer <= 0.0:
             self.snap(self.home_col, self.home_row)
-            self.state = GhostState.CHASE
+            self.state = GhostState.CHASEreversed
 
     def _update_frightened(self,
                            maze: Maze,
                            dt: float,
                            player_cell: Cell) -> None:
         self.frightened_timer = max(0.0, self.frightened_timer - dt)
+        if self.reverse_requested:
+            reverse = self.direction.opposite()
+            if reverse is not Direction.NONE and self.can_move(maze, reverse):
+                self.reverse_requested = False
         self.choose_direction(maze, player_cell)
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
