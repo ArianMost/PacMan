@@ -69,7 +69,7 @@ def build_pellet_field(
         for row in range(maze.rows)
         for col in range(maze.cols)
         if (
-            maze.is_walkable(col, row)
+            maze.is_walkable(row, col)
             and (col, row) not in pf.super_pacgums
             and (col, row) not in exclude
         )
