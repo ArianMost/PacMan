@@ -94,7 +94,7 @@ class Entity:
         y = self.row
 
         # Never allow an entity to leave the maze.
-        if not (0 <= x + self.direction.dx < maze.cols and 0 <= y + self.direction.dy < maze.rows):
+        if not (0 <= x + direction.dx < maze.cols and 0 <= y + direction.dy < maze.rows):
             return False
 
         if direction is Direction.UP:
