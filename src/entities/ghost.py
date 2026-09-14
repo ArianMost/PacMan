@@ -36,9 +36,9 @@ class Ghost(Entity):
         self.reverse_requested = False
 
 
-    _CHASE_SPEED_MULT: ClassVar[float] = 0.5
+    _CHASE_SPEED_MULT: ClassVar[float] = 0.6
 
-    _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.5
+    _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.8
     _EATEN_SPEED_MULT: ClassVar[float] = 1.8
 
     def set_home(self, col: int, row: int) -> None:
@@ -50,16 +50,22 @@ class Ghost(Entity):
         """Enter FRIGHTENED state for `duration` seconds.
 
         A ghost that is already EATEN (just a pair of eyes heading home)
-        ignores this — it isn't "on the board" to be caught again until
+        ignores this, it isn't "on the board" to be caught again until
         it respawns.
         """
         if self.state is GhostState.EATEN:
             return
         self.state = GhostState.FRIGHTENED
         self.frightened_timer = duration
-        self.reverse_requested = True
-        self.direction = self.direction.opposite()
-        self.next_direction = Direction.NONE
+
+        if self.direction is not Direction.NONE:
+            old_direction = self.direction
+            self.col += old_direction.dx
+            self.row += old_direction.dy
+            self.direction = self.direction.opposite()
+            self._progress = 1.0 - self._progress
+        else:
+            self.next_direction = Direction.NONE
 
     def get_eaten(self, respawn_delay: float) -> None:
         """Called when the player catches this ghost while it's frightened."""
@@ -136,17 +142,14 @@ class Ghost(Entity):
         self.update(maze, dt, speed_multiplier=self._EATEN_SPEED_MULT)
         if (self.col, self.row) == home and self.respawn_timer <= 0.0:
             self.snap(self.home_col, self.home_row)
-            self.state = GhostState.CHASEreversed
+            self.state = GhostState.CHASE
 
     def _update_frightened(self,
                            maze: Maze,
                            dt: float,
                            player_cell: Cell) -> None:
         self.frightened_timer = max(0.0, self.frightened_timer - dt)
-        if self.reverse_requested:
-            reverse = self.direction.opposite()
-            if reverse is not Direction.NONE and self.can_move(maze, reverse):
-                self.reverse_requested = False
+
         self.choose_direction(maze, player_cell)
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
