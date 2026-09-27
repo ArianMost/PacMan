@@ -7,10 +7,10 @@ import random
 from src.maze.maze_adapter import Maze
 
 GHOST_NAMES_COLORS = [
-    ("Blinky", "#9B59B6"),
-    ("Pinky",  "#2ECC71"),
-    ("Inky",   "#F1C40F"),
-    ("Clyde",  "#3498DB")
+    ("blinky", "#9B59B6"),
+    ("pinky",  "#2ECC71"),
+    ("inky",   "#F1C40F"),
+    ("clyde",  "#3498DB")
 ]
 
 class GhostState(Enum):
