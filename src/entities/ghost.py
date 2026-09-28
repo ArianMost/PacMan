@@ -12,15 +12,33 @@ GHOST_NAMES_COLORS = [
     ("inky",   "#F1C40F"),
     ("clyde",  "#3498DB")
 ]
+_WALL_BIT = {Direction.UP: 1, Direction.RIGHT: 2, Direction.DOWN: 4, Direction.LEFT: 8}
+Cell = tuple[int, int]
+
+def _bfs_distance_field(maze: Maze, target: Cell) -> dict[Cell, int]:
+    """BFS distance from every reachable cell to target."""
+    distance = {target: 0}
+    queue: deque[Cell] = deque([target])
+
+    while queue:
+        current = queue.popleft()
+        col, row = current
+        for direction in _CARDINALS:
+            neighbor_col, neighbor_row = col + direction.dx, row + direction.dy
+            if 0 <= neighbor_col < maze.cols and 0 <= neighbor_row < maze.rows:
+                if (maze.grid[row][col] & _WALL_BIT[direction]) == 0:
+                    neighbor = (neighbor_col, neighbor_row)
+                    if neighbor not in distance:
+                        distance[neighbor] = distance[current] + 1
+                        queue.append(neighbor)
+    return distance
+
 
 class GhostState(Enum):
     """Enumeration representing the behavioral states of a ghost."""
     CHASE = 1
     FRIGHTENED = 2
     EATEN = 3
-
-
-Cell = tuple[int, int]
 
 
 class Ghost(Entity):
