@@ -19,7 +19,7 @@ DIRECTION_KEY = {
     pygame.K_d: Direction.RIGHT,
 }
 
-FPS = 60
+FPS = 40
 
 
 class Game:
@@ -45,6 +45,7 @@ class Game:
             if self.state.phase is ScreenTypes.PLAYING:
                 self.state.update(dt)
             self.display.menu_selected = self.menu_index
+            self.display.pause_selected = self.pause_index
             self.display.draw()
             pygame.display.flip()
             clock.tick(60)
