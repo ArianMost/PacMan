@@ -71,6 +71,7 @@ def _validate_positive_int(val: str, default_val: int, label: str):
         return num
     except (TypeError, ValueError):
         print(f"[config] warning: invalid '{label} : {val}', using the default value '{default_val}'", file=sys.stderr)
+        # return default_val
 
 def _validate_optional_positive_int(val: Any, name: str) -> int | None:
     """Like ``_validate_positive_int`` but for an optional per-level override."""
@@ -93,6 +94,7 @@ def _validate_nonnegative_int(val: str, default_val: int, label: str):
         return num
     except (TypeError, ValueError):
         print(f"[config] warning: invalid '{label} : {val}', using the default value '{default_val}'", file=sys.stderr)
+        # return default_val
 
 def _validate_optional_nonnegative_int(val: Any, name: str) -> int | None:
     """Like ``_validate_nonnegative_int`` but for an optional per-level override."""
