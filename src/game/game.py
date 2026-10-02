@@ -19,7 +19,7 @@ DIRECTION_KEY = {
     pygame.K_d: Direction.RIGHT,
 }
 
-FPS = 60
+FPS = 40
 
 
 class Game:

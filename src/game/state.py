@@ -94,7 +94,7 @@ class GameState:
             self.fruit_spawned_this_level = False
         ## Spawn fruit only once when a specific threshold of pacgums is reached
         if self.fruit_cell is None and not self.fruit_spawned_this_level:
-            if len(self.pellets.pacgums) > 0 and len(self.pellets.pacgums) <= 20: 
+            if len(self.pellets.pacgums) > 0 and len(self.pellets.pacgums) <= 20:
                 open_cells = [
                     (c, r) for r in range(self.maze.rows) for c in range(self.maze.cols)
                     if self.maze.is_walkable(c, r)
@@ -209,6 +209,9 @@ class GameState:
         # Reset Pac-Man and ghosts, but keep the pellets already eaten
         self.player.respawn(*self.maze.player_sp)
         for ghost in self.ghosts:
-            ghost.set_home(ghost.col, ghost.row)
+            ghost.snap(ghost.home_col, ghost.home_row)
+            ghost.frightened_timer = 0.0
+            ghost.respawn_timer = 0.0
+            ghost.state = GhostState.CHASE
         self.level_time_remained = float(self.config.level_max_time)
         self.phase = ScreenTypes.WAITING_TO_START
