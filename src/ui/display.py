@@ -384,11 +384,21 @@ class Display:
 
         is_dying = getattr(self.state, "is_dying", False)
         if is_dying:
-            anim_frame = (current_time // 400) % 3 + 1
+            # Total death duration is 1.2 seconds. Calculate elapsed time from death_timer.
+            total_duration = 1.2
+            death_timer = getattr(self.state, "death_timer", total_duration)
+            elapsed = total_duration - death_timer
+            
+            # Divide elapsed time evenly across 3 frames (0.4 seconds per frame)
+            # Clamp between 1 and 3 so it never exceeds 3 or loops
+            anim_frame = int(elapsed / (total_duration / 3)) + 1
+            anim_frame = max(1, min(3, anim_frame))
+            
             action_str = f"die{anim_frame}"
         elif self.state.player.direction is Direction.NONE:
             action_str = "start"
         else:
+            # Keep global ticks for normal eating animation so it loops smoothly while moving
             anim_frame = (current_time // 250) % 3 + 1
             action_str = f"eat{anim_frame}"
 
@@ -399,6 +409,13 @@ class Display:
                 paths = [
                     "images/pac_man/pac_man_start.png",
                     "src/images/pac_man/pac_man_start.png",
+                    "src/images/pac_man.png",
+                ]
+            elif action_str.startswith("die"):
+                paths = [
+                    f"images/pac_man/pac_man_{action_str}.png",
+                    f"src/images/pac_man/pac_man_{action_str}.png",
+                    f"images/pac_man/pac_man_{dir_str}_{action_str}.png",
                     "src/images/pac_man.png",
                 ]
             else:

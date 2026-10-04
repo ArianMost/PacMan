@@ -32,6 +32,7 @@ class HighscoreStore:
         self.filename = filename
         if entries is None:
             self.entries = []
+            self.load()
         else:
             self.entries = entries
 
@@ -148,6 +149,7 @@ class HighscoreStore:
         self.entries.sort(key=lambda e: e.score, reverse=True)
         made_top = self.entries.index(entry) < MAX_ENTRIES
         self.entries = self.entries[:MAX_ENTRIES]
+        self.save()
         return made_top
 
     def top(self, count: int = MAX_ENTRIES) -> list[HighscoreEntry]:
