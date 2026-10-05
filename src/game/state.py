@@ -67,8 +67,20 @@ class GameState:
 
     def update(self, dt: float) -> None:
         """Update the game for one frame."""
+        if getattr(self, "is_dying", False):
+            self.death_timer -= dt
+            if self.death_timer <= 0:
+                self.is_dying = False
+                self.player.lose_life()
+                if self.player.lives <= 0:
+                    self.phase = ScreenTypes.GAME_OVER
+                else:
+                    self.restart_current_level()
+            return
         if self.phase != ScreenTypes.PLAYING:
             return
+        # if hasattr(self, "level_protection_timer") and self.level_protection_timer > 0:
+        #     self.level_protection_timer -= dt
 
         self.level_time_remained -= dt
         if self.level_time_remained <= 0:
@@ -90,6 +102,12 @@ class GameState:
         if self.pellets.remaining() == 0:
             self.advance_level()
             return
+        # can_advance = (
+        #     not hasattr(self, "level_protection_timer") or self.level_protection_timer <= 0
+        # )
+        # if can_advance and self.pellets.remaining() == 0 and len(self.pellets.pacgums) > 0:
+        #     self.advance_level()
+        #     return
         if not hasattr(self, "fruit_spawned_this_level"):
             self.fruit_spawned_this_level = False
         ## Spawn fruit only once when a specific threshold of pacgums is reached
@@ -123,11 +141,14 @@ class GameState:
                     ghost.get_eaten(respawn_delay=3.0)
                 elif ghost.state is GhostState.CHASE:
                     if not (self.cheat.enabled and self.cheat.invincible):
-                        self.player.lose_life()
-                        if self.player.lives <= 0:
-                            self.phase = ScreenTypes.GAME_OVER
-                        else:
-                            self.restart_current_level()
+                        if not getattr(self, "is_dying", False):
+                            self.is_dying = True
+                            self.death_timer = 1.2
+                        # self.player.lose_life()
+                        # if self.player.lives <= 0:
+                        #     self.phase = ScreenTypes.GAME_OVER
+                        # else:
+                        #     self.restart_current_level()
 
 
     def handle_player_direction(self, direction: Direction) -> None:
@@ -157,7 +178,6 @@ class GameState:
 
             # Remember the ghost's starting position
             ghost.set_home(col, row)
-
             self.ghosts.append(ghost)
 
     def _load_level(self, level_index: int) -> None:
@@ -195,6 +215,7 @@ class GameState:
         # Reset fruit state for the new level
         self.fruit_cell = None
         self.fruit_spawned_this_level = False
+        # self.level_protection_timer = 0.5
 
     def advance_level(self) -> None:
         print("ADVANCING LEVEL")
