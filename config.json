@@ -98,7 +98,7 @@
             "height": 17,
             "seed": 909,
             "level_max_time": 210,
-            "bonus_fruit_type": "Bell",
+            "bonus_fruit_type": "Galaxian Flagship",
             "points_per_bonus_fruit": 3000,
             "walls_color": "#118ab2"
         },
