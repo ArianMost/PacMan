@@ -35,6 +35,9 @@ run: install
 debug: install
 	uv run -m pdb pac-man.py $(CONFIG)
 
+build:
+	./build.sh
+
 test: install
 	uv run pytest tests/
 
@@ -51,4 +54,4 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	rm -rf .mypy_cache .pytest_cache
 
-.PHONY: install run debug clean lint lint-strict test env uv
+.PHONY: install run debug build clean lint lint-strict test env uv
