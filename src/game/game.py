@@ -41,6 +41,25 @@ class Game:
         # The loop runs as long as the state is not phase.QUIT
         while self.running and self.state.phase is not ScreenTypes.QUIT:
             dt = clock.tick(FPS) / 1000.0
+            # === PLAY START/MENU MUSIC HERE (Runs every frame) ===
+            should_play_music = (
+                self.state.phase == ScreenTypes.MENU or
+                (self.state.phase == ScreenTypes.WAITING_TO_START and 
+                 self.state.current_level_index == 0 and 
+                 not getattr(self.state, "intro_music_played", False))
+            )
+
+            if should_play_music:
+                if hasattr(self.state, "start_music_path") and self.state.start_music_path and not pygame.mixer.music.get_busy():
+                    try:
+                        pygame.mixer.music.load(self.state.start_music_path)
+                        pygame.mixer.music.set_volume(1.0)
+                        pygame.mixer.music.play(loops=-1)
+                    except Exception as e:
+                        print(f"Error playing music: {e}")
+            # If we enter PLAYING mode, ensure the flag is marked as played
+            if self.state.phase == ScreenTypes.PLAYING:
+                self.state.intro_music_played = True
             self._handle_events()
             if self.state.phase is ScreenTypes.PLAYING:
                 self.state.update(dt)
@@ -186,6 +205,8 @@ class Game:
     def _handle_waiting_keys(self, event: pygame.event.Event) -> None:
         """Handle input when waiting at the start of a level before ghosts release."""
         if event.key in (pygame.K_RETURN, pygame.K_SPACE) or event.key in DIRECTION_KEY:
+            # === STOP THE INTRO MUSIC HERE ===
+            pygame.mixer.music.stop()
             # Transition from waiting to active gameplay
             self.state.phase = ScreenTypes.PLAYING
             if event.key in DIRECTION_KEY:
