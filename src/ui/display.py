@@ -329,6 +329,15 @@ class Display:
                 x = offset_x + col_idx * cell_size
                 y = offset_y + row_idx * cell_size
 
+                # Fill non-walkable cells
+                if not self.state.maze.is_walkable(row_idx, col_idx):
+                    pygame.draw.rect(
+                        self.surface,
+                        wall_color,
+                        (x, y, cell_size, cell_size),
+                    )
+                    continue
+
                 wall_thickness = max(2, cell_size // 8)
                 if cell_value & 1:  # UP
                     pygame.draw.line(self.surface, wall_color, (x, y), (x + cell_size, y), wall_thickness)
