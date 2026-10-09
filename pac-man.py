@@ -16,6 +16,7 @@ from src.game.game import main  # noqa: E402
 from src.config.config_loader import load_config
 from src.game.game import Game 
 
+
 def _usage_error(message: str) -> int:
     print(f"error: {message}", file=sys.stderr)
     print("usage: python3 pac-man.py <config.json>", file=sys.stderr)
@@ -40,6 +41,7 @@ def run() -> int:
 
     app = Game(config)
     app.run()
+
 
 if __name__ == "__main__":
     sys.exit(run())

@@ -13,8 +13,12 @@ GHOST_NAMES_COLORS = [
     ("inky",   "#F1C40F"),
     ("clyde",  "#3498DB")
 ]
-_WALL_BIT = {Direction.UP: 1, Direction.RIGHT: 2, Direction.DOWN: 4, Direction.LEFT: 8}
+_WALL_BIT = {Direction.UP: 1,
+             Direction.RIGHT: 2,
+             Direction.DOWN: 4,
+             Direction.LEFT: 8}
 Cell = tuple[int, int]
+
 
 def _bfs_distance_field(maze: Maze, target: Cell) -> dict[Cell, int]:
     """BFS distance from every reachable cell to target."""
@@ -76,7 +80,8 @@ class GhostState(Enum):
 
 
 class Ghost(Entity):
-    def __init__(self, col: int, row: int, name: str, color: Tuple[int, int, int]) -> None:
+    def __init__(self, col: int, row: int, name: str,
+                 color: Tuple[int, int, int]) -> None:
         super().__init__(col=col, row=row)
         self.name: str = name
         self.color: Tuple[int, int, int] = color
@@ -89,17 +94,14 @@ class Ghost(Entity):
         self._home_distance_field = None
         self._last_decided_cell = None
 
-
     _CHASE_SPEED_MULT: ClassVar[float] = 0.6
     _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.8
     _EATEN_SPEED_MULT: ClassVar[float] = 1.8
-
 
     def set_home(self, col: int, row: int) -> None:
         """Assign (or reassign) this ghost's home/respawn corner."""
         self.home_col = col
         self.home_row = row
-
 
     def frighten(self, duration: float) -> None:
         """Enter FRIGHTENED state for `duration` seconds.
@@ -122,13 +124,11 @@ class Ghost(Entity):
         else:
             self.next_direction = Direction.NONE
 
-
     def get_eaten(self, respawn_delay: float) -> None:
         """Called when the player catches this ghost while it's frightened."""
         self.state = GhostState.EATEN
         self.respawn_timer = respawn_delay
         self.frightened_timer = 0.0
-
 
     def choose_direction(self, maze: Maze, target: Cell) -> None:
         """Pick `next_direction` given the current target cell and state.
@@ -160,7 +160,6 @@ class Ghost(Entity):
                 options, key=lambda d: self._squared_distance(d, target)
             )
 
-
     def _squared_distance(self,
                           direction: Direction,
                           target: Cell) -> float | Any:
@@ -169,7 +168,6 @@ class Ghost(Entity):
         row = self.row + direction.dy
         tcol, trow = target
         return (col - tcol) ** 2 + (row - trow) ** 2
-
 
     def _chase_target(self, player_cell: Cell) -> Cell:
         """Compute the CHASE-mode target cell, varied by ghost personality.
@@ -183,17 +181,16 @@ class Ghost(Entity):
         - anything else: falls back to direct chase.
         """
         pcol, prow = player_cell
-        if self.name == "pinky":
-            return pcol + 4, prow - 4
-        if self.name == "inky":
-            return pcol + random.choice((-4, 4)), prow + random.choice((-4, 4))
-        if self.name == "clyde":
-            distance = (self.col - pcol) ** 2 + (self.row - prow) ** 2
-            if distance <= 64:  # within 8 cells: get shy, retreat home
-                return self.home_col, self.home_row
-            return pcol, prow
+        # if self.name == "pinky":
+        #     return pcol + 4, prow - 4
+        # if self.name == "inky":
+        #     return pcol + random.choice((-4, 4)), prow + random.choice((-4, 4))
+        # if self.name == "clyde":
+        #     distance = (self.col - pcol) ** 2 + (self.row - prow) ** 2
+        #     if distance <= 64:  # within 8 cells: get shy, retreat home
+        #         return self.home_col, self.home_row
+        #     return pcol, prow
         return pcol, prow  # blinky and default
-
 
     def _update_eaten(self, maze: Maze, dt: float) -> None:
         self.respawn_timer = max(0.0, self.respawn_timer - dt)
@@ -218,7 +215,6 @@ class Ghost(Entity):
             self._last_decided_cell = current_cell
         self.update(maze, dt, speed_multiplier=self._EATEN_SPEED_MULT)
 
-
     def _update_frightened(self,
                            maze: Maze,
                            dt: float,
@@ -230,12 +226,10 @@ class Ghost(Entity):
         if self.frightened_timer <= 0.0:
             self.state = GhostState.CHASE
 
-
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         target = self._chase_target(player_cell)
         self.choose_direction(maze, target)
         self.update(maze, dt, speed_multiplier=self._CHASE_SPEED_MULT)
-
 
     def update_ai(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Advance AI + movement by `dt` seconds. Call once per frame.

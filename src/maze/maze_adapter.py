@@ -30,7 +30,8 @@ class MazeAdapter:
     def __init__(self, generator: MazeGenerator | None = None) -> None:
         self._generator = generator or ExternalGeneratorAdapter()
 
-    def build(self, width: int, height: int, seed: int, perfect: bool = False) -> Maze:
+    def build(self, width: int, height: int, seed: int,
+              perfect: bool = False) -> Maze:
         try:
             grid = self._generator.generate(width, height, seed, perfect)
             if not grid or not grid[0]:
@@ -53,16 +54,19 @@ class MazeAdapter:
     def _get_ghosts_sp(
         grid: list[list[int]], cols: int, rows: int
     ) -> list[tuple[int, int]]:
-        maze_corners = [(1, 1), (cols - 2, 1), (1, rows - 2), (cols - 2, rows - 2)]
+        maze_corners = [(1, 1), (cols - 2, 1),
+                        (1, rows - 2), (cols - 2, rows - 2)]
         return [
             MazeAdapter._find_nearest_open(grid, cols, rows, col, row)
             for col, row in maze_corners
         ]
 
     @staticmethod
-    def _get_player_sp(grid: list[list[int]], cols: int, rows: int) -> tuple[int, int]:
+    def _get_player_sp(grid: list[list[int]], cols: int,
+                       rows: int) -> tuple[int, int]:
         player_col, player_row = cols // 2, rows // 2
-        return MazeAdapter._find_nearest_open(grid, cols, rows, player_col, player_row)
+        return MazeAdapter._find_nearest_open(grid, cols,
+                                              rows, player_col, player_row)
 
 
     @staticmethod
@@ -76,7 +80,8 @@ class MazeAdapter:
         """Find the nearest open cell to a starting position using BFS.
 
         The search checks cells in order of their grid distance from the
-        starting position, considering four directions (up, down, left, and right).
+        starting position, considering four directions
+        (up, down, left, and right).
         """
         queue: Deque[tuple[int, int]] = deque()
         visited: set[tuple[int, int]] = set()

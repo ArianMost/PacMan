@@ -33,7 +33,6 @@ class Game:
         self.display = Display(self.highscores, self.state, self.menu_index, self.pause_index)
         self.running = True
 
-
     def run(self) -> None:
         """Run the application until the user chooses Exit."""
         clock = pygame.time.Clock()
@@ -44,8 +43,8 @@ class Game:
             # === PLAY START/MENU MUSIC HERE (Runs every frame) ===
             should_play_music = (
                 self.state.phase == ScreenTypes.MENU or
-                (self.state.phase == ScreenTypes.WAITING_TO_START and 
-                 self.state.current_level_index == 0 and 
+                (self.state.phase == ScreenTypes.WAITING_TO_START and
+                 self.state.current_level_index == 0 and
                  not getattr(self.state, "intro_music_played", False))
             )
 
@@ -69,7 +68,6 @@ class Game:
             pygame.display.flip()
             clock.tick(60)
         pygame.quit()
-
 
     def _handle_events(self) -> None:
         for event in pygame.event.get():
@@ -96,12 +94,12 @@ class Game:
 
     def _handle_menu_keys(self, event: pygame.event.Event) -> None:
         """Handle keyboard input while the main menu is displayed."""
-        if event.key == pygame.K_DOWN:
+        if event.key == pygame.K_DOWN or event.key == pygame.K_s:
             self.menu_index += 1
             if self.menu_index >= len(MAIN_MENU_OPTIONS):
                 self.menu_index = 0
 
-        elif event.key == pygame.K_UP:
+        elif event.key == pygame.K_UP or event.key == pygame.K_w:
             self.menu_index -= 1
             if self.menu_index < 0:
                 self.menu_index = len(MAIN_MENU_OPTIONS) - 1
@@ -154,13 +152,13 @@ class Game:
             print("Level Skipped!")
 
     def _handle_pause_keys(self, event: pygame.event.Event) -> None:
-        if event.key == pygame.K_DOWN:
+        if event.key == pygame.K_DOWN or event.key == pygame.K_s:
             self.pause_index += 1
 
             if self.pause_index > 1:
                 self.pause_index = 0
 
-        elif event.key == pygame.K_UP:
+        elif event.key == pygame.K_UP or event.key == pygame.K_w:
             self.pause_index -= 1
 
             if self.pause_index < 0:
@@ -178,7 +176,8 @@ class Game:
 
     def _handle_back_keys(self, event: pygame.event.Event) -> None:
         if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
-            if self.state.phase in (ScreenTypes.GAME_OVER, ScreenTypes.VICTORY):
+            if self.state.phase in (ScreenTypes.GAME_OVER,
+                                    ScreenTypes.VICTORY):
                 self.state.phase = ScreenTypes.END_OF_GAME
             else:
                 self.state.phase = ScreenTypes.MENU
@@ -214,12 +213,11 @@ class Game:
         elif event.key == pygame.K_ESCAPE:
             self.state.phase = ScreenTypes.MENU
 
-def main(config_path: str) -> int:
+def main(config_path: str) -> None:
     config = load_config(config_path)
     HIGHSCORE_FILENAME = "highscore.json"
     pygame.init()
     highscores = HighscoreStore(HIGHSCORE_FILENAME)
     state = GameState(config)
-
     app = Game(config)
     app.run()

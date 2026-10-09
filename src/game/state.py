@@ -1,3 +1,4 @@
+import time
 from typing import List
 from src.entities.player import Player
 from src.score.store import ScoringSystem
@@ -40,7 +41,8 @@ class GameState:
         self.ghosts: List[Ghost] = []
         self.phase = ScreenTypes.MENU
         self.previous_screen = ScreenTypes.MENU
-        self.maze: Maze = Maze(grid=[[1]], cols=1, rows=1, ghosts_sp=[(0, 0)], player_sp=(0, 0))
+        self.maze: Maze = Maze(grid=[[1]], cols=1, rows=1,
+                               ghosts_sp=[(0, 0)], player_sp=(0, 0))
         self.maze_adapter = MazeAdapter()
         self.current_level_index: int = 0
         self.fruit_cell: tuple | None = None
@@ -50,7 +52,7 @@ class GameState:
         self.name_player = ""
         try:
             pygame.mixer.init()
-            self.death_sound = pygame.mixer.Sound("audio/pac_man_death.wav") # or "src/sounds/death.wav"
+            self.death_sound = pygame.mixer.Sound("audio/pac_man_death.wav")
         except Exception as e:
             print(f"Warning: Could not load death sound: {e}")
             self.death_sound = None
@@ -144,15 +146,7 @@ class GameState:
                     self.restart_current_level()
             return
         if self.phase != ScreenTypes.PLAYING:
-            # Play start/intro music on loop if we are in a menu or waiting state
-            # if self.phase in (ScreenTypes.MENU, ScreenTypes.WAITING_TO_START):
-            #     if hasattr(self, "start_music_path") and self.start_music_path and not pygame.mixer.music.get_busy():
-            #         pygame.mixer.music.load(self.start_music_path)
-            #         pygame.mixer.music.play(loops=-1)
             return
-        # if hasattr(self, "level_protection_timer") and self.level_protection_timer > 0:
-        #     self.level_protection_timer -= dt
-
         self.level_time_remained -= dt
         if self.level_time_remained <= 0:
             self.restart_current_level()
@@ -179,12 +173,7 @@ class GameState:
         if self.pellets.remaining() == 0:
             self.advance_level()
             return
-        # can_advance = (
-        #     not hasattr(self, "level_protection_timer") or self.level_protection_timer <= 0
-        # )
-        # if can_advance and self.pellets.remaining() == 0 and len(self.pellets.pacgums) > 0:
-        #     self.advance_level()
-        #     return
+
         if not hasattr(self, "fruit_spawned_this_level"):
             self.fruit_spawned_this_level = False
         ## Spawn fruit only once when a specific threshold of pacgums is reached
@@ -237,8 +226,8 @@ class GameState:
                         #     self.restart_current_level()
                             # === PLAY DEATH SOUND HERE ===
                             if hasattr(self, "death_sound") and self.death_sound:
+                                self.death_sound.set_volume(1.0)
                                 self.death_sound.play()
-
 
     def handle_player_direction(self, direction: Direction) -> None:
         self.player.next_direction = direction
@@ -249,8 +238,7 @@ class GameState:
         elif self.phase == ScreenTypes.PAUSED:
             self.phase = ScreenTypes.PLAYING
 
-
-    def _create_ghosts(self):
+    def _create_ghosts(self) -> None:
         self.ghosts = []
 
         for i in range(len(GHOST_NAMES_COLORS)):
@@ -281,10 +269,11 @@ class GameState:
             seed = self.config.seed + level_index
 
         self.level_time_remaining = level_config.level_max_time
+        t0 = time.time()
         self.maze = self.maze_adapter.build(
             level_config.width, level_config.height, seed, perfect
         )
-
+        print(f"  -> Maze built in {time.time() - t0:.4f} seconds")
         self._create_ghosts()
         self.player.respawn(*self.maze.player_sp)
 
@@ -296,7 +285,12 @@ class GameState:
         self.pellets = build_pellet_field(
             maze=self.maze,
             seed=seed,
-            corners=self.maze.ghosts_sp,
+            corners=[
+                (0, 0),
+                (self.maze.cols - 1, 0),
+                (0, self.maze.rows - 1),
+                (self.maze.cols - 1, self.maze.rows - 1),
+            ],
             exclude=occupied_cells,
             max_pacgums=self.config.pacgum,
         )
@@ -312,8 +306,10 @@ class GameState:
         if hasattr(self, "level_win_sound") and self.level_win_sound:
             self.level_win_sound.play()
         self.current_level_index += 1
+        max_levels = len(self.config.levels)
         if self.current_level_index >= len(self.config.levels):
             self.phase = ScreenTypes.VICTORY
+            self.current_level_index = max_levels - 1
             return
         self._load_level(self.current_level_index)
         self.phase = ScreenTypes.WAITING_TO_START
