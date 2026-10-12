@@ -192,15 +192,15 @@ class Ghost(Entity):
         - anything else: falls back to direct chase.
         """
         pcol, prow = player_cell
-        if self.name == "pinky":
-            return pcol + 4, prow - 4
-        if self.name == "inky":
-            return pcol + random.choice((-4, 4)), prow + random.choice((-4, 4))
-        if self.name == "clyde":
-            distance = (self.col - pcol) ** 2 + (self.row - prow) ** 2
-            if distance <= 64:  # within 8 cells: get shy, retreat home
-                return self.home_col, self.home_row
-            return pcol, prow
+        # if self.name == "pinky":
+        #     return pcol + 4, prow - 4
+        # if self.name == "inky":
+        #     return pcol + random.choice((-4, 4)), prow + random.choice((-4, 4))
+        # if self.name == "clyde":
+        #     distance = (self.col - pcol) ** 2 + (self.row - prow) ** 2
+        #     if distance <= 64:  # within 8 cells: get shy, retreat home
+        #         return self.home_col, self.home_row
+        #     return pcol, prow
         return pcol, prow  # blinky and default
 
 

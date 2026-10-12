@@ -557,6 +557,9 @@ class Display:
             fy = offset_y + frow * cell_size + cell_size // 2
             cache_key = ("fruit", fruit_filename)
 
+            if not self.state.maze.is_walkable(frow, fcol):
+                return
+
             if cache_key not in self.ghost_images:
                 paths = [
                     f"src/images/fruits/{fruit_filename}.png",
@@ -574,12 +577,15 @@ class Display:
 
             f_img = self.ghost_images.get(cache_key)
             if f_img:
+
                 f_width = int(cell_size * 1.0)
                 f_height = int(cell_size * 1.0)
                 scaled_fruit = pygame.transform.scale(f_img, (f_width, f_height))
                 f_draw_x = fx - f_width // 2
                 f_draw_y = fy - f_height // 2
-                self.surface.blit(scaled_fruit, (f_draw_x, f_draw_y))
+
+                if self.state.maze.is_walkable(fcol, frow):
+                    self.surface.blit(scaled_fruit, (f_draw_x, f_draw_y))
             else:
                 pygame.draw.circle(self.surface, (255, 100, 0), (fx, fy), cell_size // 2 - 2)
         self._draw_hud()
