@@ -90,8 +90,8 @@ class Ghost(Entity):
         self._last_decided_cell = None
 
 
-    _CHASE_SPEED_MULT: ClassVar[float] = 0.6
-    _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.8
+    _CHASE_SPEED_MULT: ClassVar[float] = 0.8
+    _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.9
     _EATEN_SPEED_MULT: ClassVar[float] = 1.8
 
 
@@ -112,6 +112,7 @@ class Ghost(Entity):
             return
         self.state = GhostState.FRIGHTENED
         self.frightened_timer = duration
+        self._last_decided_cell = None
 
         if self.direction is not Direction.NONE:
             old_direction = self.direction
@@ -128,6 +129,7 @@ class Ghost(Entity):
         self.state = GhostState.EATEN
         self.respawn_timer = respawn_delay
         self.frightened_timer = 0.0
+        self._last_decided_cell = None
 
 
     def choose_direction(self, maze: Maze, target: Cell) -> None:
@@ -150,16 +152,23 @@ class Ghost(Entity):
 
         if self.state is GhostState.FRIGHTENED:
             if random.random() < 0.5:
-                self.next_direction = random.choice(options)
+                chosen_dir = random.choice(options)
             else:
-                self.next_direction = max(
-                    options, key=lambda d: self._squared_distance(d, target)
-                )
+                chosen_dir = max(options, key=lambda d: self._squared_distance(d, target))
         else:
-            self.next_direction = min(
-                options, key=lambda d: self._squared_distance(d, target)
-            )
+            chosen_dir = min(options, key=lambda d: self._squared_distance(d, target))
 
+        self.direction = chosen_dir
+        self.next_direction = chosen_dir
+
+
+    def _decide_if_new_cell(self, maze: Maze, target: Cell) -> None:
+        """Only re-decide a direction when we've actually arrived at a new
+        cell — not every single frame — mirroring how _update_eaten decides."""
+        current_cell = (self.col, self.row)
+        if current_cell != self._last_decided_cell:
+            self.choose_direction(maze, target)
+            self._last_decided_cell = current_cell
 
     def _squared_distance(self,
                           direction: Direction,
@@ -204,6 +213,7 @@ class Ghost(Entity):
             self.direction = Direction.NONE
             self.next_direction = Direction.NONE
             self._home_distance_field = None
+            self._last_decided_cell = None
             if self.respawn_timer <= 0.0:
                 self.state = GhostState.CHASE
             return
@@ -225,15 +235,16 @@ class Ghost(Entity):
                            player_cell: Cell) -> None:
         self.frightened_timer = max(0.0, self.frightened_timer - dt)
 
-        self.choose_direction(maze, player_cell)
+        self._decide_if_new_cell(maze, player_cell)
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
             self.state = GhostState.CHASE
+            self._last_decided_cell = None
 
 
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         target = self._chase_target(player_cell)
-        self.choose_direction(maze, target)
+        self._decide_if_new_cell(maze, target)
         self.update(maze, dt, speed_multiplier=self._CHASE_SPEED_MULT)
 
 

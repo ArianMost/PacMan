@@ -1,4 +1,5 @@
 import pygame
+from src.config.config import Config
 from src.game.state import GameState, ScreenTypes
 from src.score.highscore import HighscoreStore
 from src.constants import MAIN_MENU_OPTIONS, PAUSE_MENU_OPTIONS
@@ -19,11 +20,13 @@ WINDOW_HEIGHT = 600
 class Display:
     def __init__(
         self,
+        config: Config,
         highscores: HighscoreStore,
         state: GameState,
         menu_index: int,
         pause_index: int
     ) -> None:
+        self.config = config
         self.highscores = highscores
         self.state = state
         self.surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -318,13 +321,22 @@ class Display:
 
     def _draw_maze_walls(self, grid, rows, cols, offset_x, offset_y, cell_size, maze_pixel_width, maze_pixel_height) -> None:
         """Draw maze walls via bitmask lines and outer boundary."""
-        wall_color = (30, 30, 200)
+        wall_color = self.config.levels[self.state.current_level_index].walls_color or (30, 30, 200)
         pygame.draw.rect(self.surface, wall_color, (offset_x, offset_y, maze_pixel_width, maze_pixel_height), 3)
 
         for row_idx, row in enumerate(grid):
             for col_idx, cell_value in enumerate(row):
                 x = offset_x + col_idx * cell_size
                 y = offset_y + row_idx * cell_size
+
+                # Fill non-walkable cells
+                if not self.state.maze.is_walkable(row_idx, col_idx):
+                    pygame.draw.rect(
+                        self.surface,
+                        wall_color,
+                        (x, y, cell_size, cell_size),
+                    )
+                    continue
 
                 wall_thickness = max(2, cell_size // 8)
                 if cell_value & 1:  # UP
@@ -364,12 +376,12 @@ class Display:
         px, py = self.state.player.pixel_position(cell_size)
         draw_x = int(offset_x + px)
         draw_y = int(offset_y + py)
-        
+
         if not hasattr(self, "pacman_images"):
             self.pacman_images = {}
 
         current_time = pygame.time.get_ticks()
-        
+
         dir_str = "right"
         player_dir = getattr(self.state.player, "direction", getattr(self.state.player, "current_direction", None))
         if player_dir:
@@ -388,12 +400,12 @@ class Display:
             total_duration = 1.2
             death_timer = getattr(self.state, "death_timer", total_duration)
             elapsed = total_duration - death_timer
-            
+
             # Divide elapsed time evenly across 3 frames (0.4 seconds per frame)
             # Clamp between 1 and 3 so it never exceeds 3 or loops
             anim_frame = int(elapsed / (total_duration / 3)) + 1
             anim_frame = max(1, min(3, anim_frame))
-            
+
             action_str = f"die{anim_frame}"
         elif self.state.player.direction is Direction.NONE:
             action_str = "start"
@@ -544,7 +556,7 @@ class Display:
             fx = offset_x + fcol * cell_size + cell_size // 2
             fy = offset_y + frow * cell_size + cell_size // 2
             cache_key = ("fruit", fruit_filename)
-            
+
             if cache_key not in self.ghost_images:
                 paths = [
                     f"src/images/fruits/{fruit_filename}.png",
@@ -559,7 +571,7 @@ class Display:
                     except Exception:
                         continue
                 self.ghost_images[cache_key] = loaded_fruit
-                
+
             f_img = self.ghost_images.get(cache_key)
             if f_img:
                 f_width = int(cell_size * 1.0)
