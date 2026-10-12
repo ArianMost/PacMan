@@ -294,7 +294,7 @@ class GameState:
             exclude=occupied_cells,
             max_pacgums=self.config.pacgum,
         )
-        self.level_time_remained = float(self.config.level_max_time)
+        self.level_time_remained = float(level_config.level_max_time) or float(self.config.level_max_time)
         # Reset fruit state for the new level
         self.fruit_cell = None
         self.fruit_spawned_this_level = False
@@ -322,5 +322,7 @@ class GameState:
             ghost.frightened_timer = 0.0
             ghost.respawn_timer = 0.0
             ghost.state = GhostState.CHASE
-        self.level_time_remained = float(self.config.level_max_time)
+        self.level_time_remained = float(
+            self.config.levels[self.current_level_index].level_max_time
+        ) or float(self.config.level_max_time)
         self.phase = ScreenTypes.WAITING_TO_START

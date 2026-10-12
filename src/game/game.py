@@ -30,7 +30,7 @@ class Game:
         self.state = GameState(self.config)
         self.menu_index = 0
         self.pause_index = 0
-        self.display = Display(self.highscores, self.state, self.menu_index, self.pause_index)
+        self.display = Display(self.config, self.highscores, self.state, self.menu_index, self.pause_index)
         self.running = True
 
     def run(self) -> None:
