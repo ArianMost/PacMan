@@ -35,7 +35,38 @@ class Display:
         self.small_font = pygame.font.Font(None, 36)
         self.menu_selected = menu_index
         self.pause_selected = pause_index
-        self.ghost_images = {}
+        self.ghost_images: dict[GhostState, pygame.Surface] = {}
+        self._last_checked_level = -1
+
+    def update_window_for_level(self) -> None:
+        """Check the current level and resize the window if it changed."""
+        current_level = getattr(self.state, "current_level_index", 0)
+
+        if current_level != self._last_checked_level:
+            self._last_checked_level = current_level
+
+            # Define different window resolutions for each level index
+            level_resolutions = {
+                0: (800, 630),   # Level 1 size
+                1: (800, 630),   # Level 2 size (Bigger window)
+                2: (800, 640),  # Level 3 size (Even bigger window)
+                3: (800, 640),
+                4: (800, 640),
+                5: (900, 700),
+                6: (900, 700),
+                7: (900, 800),
+                8: (950, 800),
+                9: (1000, 900)
+            }
+
+            # Get the width/height for this level,
+            # or default to a max size if higher
+            width, height = level_resolutions.get(current_level, (1100, 800))
+
+            # Resize the Pygame window surface
+            self.surface = pygame.display.set_mode((width, height))
+            print(f"Resized window for Level {current_level + 1}"
+                  f"to {width}x{height}")
 
     def _draw_menu(self) -> None:
         """Draw the main menu and its four selectable options."""
@@ -213,6 +244,7 @@ class Display:
 
     def draw(self) -> None:
         """Draw the screen that matches the current menu phase."""
+        self.update_window_for_level()
         if self.state.phase is ScreenTypes.MENU:
             self._draw_menu()
         # elif self.state.phase is ScreenTypes.WAITING_TO_START:
@@ -295,18 +327,22 @@ class Display:
         rows = maze.rows if hasattr(maze, "rows") else len(grid)
         cols = maze.cols if hasattr(maze, "cols") else len(grid[0])
 
+        current_width = self.surface.get_width()
+        current_height = self.surface.get_height()
         hud_space = 80
         available_width = WINDOW_WIDTH - 40
         available_height = WINDOW_HEIGHT - hud_space - 20
 
         cell_size_x = available_width // cols
         cell_size_y = available_height // rows
-        cell_size = max(16, min(cell_size_x, cell_size_y))
+        cell_size = max(38, min(cell_size_x, cell_size_y))
 
         maze_pixel_width = cols * cell_size
         maze_pixel_height = rows * cell_size
-        offset_x = (WINDOW_WIDTH - maze_pixel_width) // 2
-        offset_y = hud_space + (available_height - maze_pixel_height) // 2
+        offset_x = max(30, (current_width - maze_pixel_width) // 2)
+        min_top_margin = hud_space + 10
+        calculated_offset_y = hud_space + (available_height - maze_pixel_height) // 2
+        offset_y = max(hud_space + 10, calculated_offset_y) + 15
 
         # Draw components modularly
         self._draw_maze_walls(grid, rows, cols, offset_x, offset_y, cell_size, maze_pixel_width, maze_pixel_height)
@@ -355,20 +391,24 @@ class Display:
                 for pcol, prow in self.state.pellets.pacgums:
                     px = offset_x + pcol * cell_size + cell_size // 2
                     py = offset_y + prow * cell_size + cell_size // 2
-                    pygame.draw.circle(self.surface, (255, 180, 180), (px, py), max(2, cell_size // 6))
+                    pygame.draw.circle(self.surface, (255, 255, 255), (px, py),
+                                       max(2, cell_size // 8))
 
-    def _draw_super_gums(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+    def _draw_super_gums(self, offset_x: int, offset_y: int,
+                         cell_size: int) -> None:
         """Draw flashing power pellets."""
-        if hasattr(self.state, "pellets") and self.state.pellets and hasattr(self.state.pellets, "super_pacgums"):
+        if hasattr(self.state, "pellets") and self.state.pellets and hasattr(
+                self.state.pellets, "super_pacgums"):
             super_gums = self.state.pellets.super_pacgums
             current_time = pygame.time.get_ticks()
             if (current_time // 250) % 2 == 0:
                 for scol, srow in super_gums:
                     px = offset_x + scol * cell_size + cell_size // 2
                     py = offset_y + srow * cell_size + cell_size // 2
-                    pygame.draw.circle(self.surface, (255, 184, 255), (px, py), max(4, cell_size // 3))
+                    pygame.draw.circle(self.surface, (255, 255, 180), (px, py), max(4, cell_size // 3))
 
-    def _draw_pacman(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+    def _draw_pacman(self, offset_x: int, offset_y: int,
+                     cell_size: int) -> None:
         """Draw Pac-Man player with directional and animated sprites."""
         if not (hasattr(self.state, "player") and self.state.player):
             return
@@ -376,14 +416,12 @@ class Display:
         px, py = self.state.player.pixel_position(cell_size)
         draw_x = int(offset_x + px)
         draw_y = int(offset_y + py)
-
         if not hasattr(self, "pacman_images"):
             self.pacman_images = {}
-
         current_time = pygame.time.get_ticks()
-
         dir_str = "right"
-        player_dir = getattr(self.state.player, "direction", getattr(self.state.player, "current_direction", None))
+        player_dir = getattr(self.state.player, "direction", getattr(
+            self.state.player, "current_direction", None))
         if player_dir:
             if hasattr(player_dir, "name"):
                 d_name = player_dir.name.lower()
@@ -396,7 +434,7 @@ class Display:
 
         is_dying = getattr(self.state, "is_dying", False)
         if is_dying:
-            # Total death duration is 1.2 seconds. Calculate elapsed time from death_timer.
+            # Total death duration is 1.2 seconds.Calculate elapsed time from death_timer.
             total_duration = 1.2
             death_timer = getattr(self.state, "death_timer", total_duration)
             elapsed = total_duration - death_timer
@@ -461,7 +499,8 @@ class Display:
             center_y = draw_y + cell_size // 2
             pygame.draw.circle(self.surface, YELLOW, (center_x, center_y), cell_size // 2 - 2)
 
-    def _draw_ghosts(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+    def _draw_ghosts(self, offset_x: int, offset_y: int,
+                     cell_size: int) -> None:
         """Draw ghosts with frightened, flashing, eyes, and directional states."""
         if not (hasattr(self.state, "ghosts") and self.state.ghosts):
             return
@@ -587,5 +626,6 @@ class Display:
                 if self.state.maze.is_walkable(fcol, frow):
                     self.surface.blit(scaled_fruit, (f_draw_x, f_draw_y))
             else:
-                pygame.draw.circle(self.surface, (255, 100, 0), (fx, fy), cell_size // 2 - 2)
+                pygame.draw.circle(self.surface, (255, 100, 0), (fx, fy),
+                                   cell_size // 2 - 2)
         self._draw_hud()

@@ -3,6 +3,7 @@ import random
 from typing import Set, Tuple
 from src.maze.maze import Maze
 
+
 @dataclass
 class PelletField:
     """
@@ -24,13 +25,16 @@ class PelletField:
 
     def eat_pacgum(self, cell: Tuple[int, int]) -> bool:
         """
-        Attempts to eat a regular pacgum at the given cell coordinate.
+        Attempts to eat a regular
+        pacgum at the given cell coordinate.
 
         Args:
-            cell: The (col, row) tuple representing Pac-Man's current location.
+            cell: The (col, row) tuple representing
+            Pac-Man's current location.
 
         Returns:
-            bool: True if a pacgum was actually eaten, False if the cell was empty.
+            bool: True if a pacgum was actually eaten,
+            False if the cell was empty.
         """
         if cell in self.pacgums:
             self.pacgums.remove(cell)
@@ -39,13 +43,15 @@ class PelletField:
 
     def eat_super_pacgum(self, cell: Tuple[int, int]) -> bool:
         """
-        Attempts to eat a super-pacgum (power pellet) at the given cell coordinate.
+        Attempts to eat a super-pacgum (power pellet) at
+        the given cell coordinate.
 
         Args:
             cell: The (col, row) tuple representing Pac-Man's current location.
 
         Returns:
-            bool: True if a super-pacgum was eaten, False if the cell was empty.
+            bool: True if a super-pacgum was eaten,
+            False if the cell was empty.
         """
         if cell in self.super_pacgums:
             self.super_pacgums.remove(cell)

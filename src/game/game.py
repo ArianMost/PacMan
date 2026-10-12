@@ -33,7 +33,6 @@ class Game:
         self.display = Display(self.config, self.highscores, self.state, self.menu_index, self.pause_index)
         self.running = True
 
-
     def run(self) -> None:
         """Run the application until the user chooses Exit."""
         clock = pygame.time.Clock()
@@ -41,6 +40,25 @@ class Game:
         # The loop runs as long as the state is not phase.QUIT
         while self.running and self.state.phase is not ScreenTypes.QUIT:
             dt = clock.tick(FPS) / 1000.0
+            # === PLAY START/MENU MUSIC HERE (Runs every frame) ===
+            should_play_music = (
+                self.state.phase == ScreenTypes.MENU or
+                (self.state.phase == ScreenTypes.WAITING_TO_START and
+                 self.state.current_level_index == 0 and
+                 not getattr(self.state, "intro_music_played", False))
+            )
+
+            if should_play_music:
+                if hasattr(self.state, "start_music_path") and self.state.start_music_path and not pygame.mixer.music.get_busy():
+                    try:
+                        pygame.mixer.music.load(self.state.start_music_path)
+                        pygame.mixer.music.set_volume(1.0)
+                        pygame.mixer.music.play(loops=-1)
+                    except Exception as e:
+                        print(f"Error playing music: {e}")
+            # If we enter PLAYING mode, ensure the flag is marked as played
+            if self.state.phase == ScreenTypes.PLAYING:
+                self.state.intro_music_played = True
             self._handle_events()
             if self.state.phase is ScreenTypes.PLAYING:
                 self.state.update(dt)
@@ -50,7 +68,6 @@ class Game:
             pygame.display.flip()
             clock.tick(60)
         pygame.quit()
-
 
     def _handle_events(self) -> None:
         for event in pygame.event.get():
@@ -77,12 +94,12 @@ class Game:
 
     def _handle_menu_keys(self, event: pygame.event.Event) -> None:
         """Handle keyboard input while the main menu is displayed."""
-        if event.key == pygame.K_DOWN:
+        if event.key == pygame.K_DOWN or event.key == pygame.K_s:
             self.menu_index += 1
             if self.menu_index >= len(MAIN_MENU_OPTIONS):
                 self.menu_index = 0
 
-        elif event.key == pygame.K_UP:
+        elif event.key == pygame.K_UP or event.key == pygame.K_w:
             self.menu_index -= 1
             if self.menu_index < 0:
                 self.menu_index = len(MAIN_MENU_OPTIONS) - 1
@@ -135,13 +152,13 @@ class Game:
             print("Level Skipped!")
 
     def _handle_pause_keys(self, event: pygame.event.Event) -> None:
-        if event.key == pygame.K_DOWN:
+        if event.key == pygame.K_DOWN or event.key == pygame.K_s:
             self.pause_index += 1
 
             if self.pause_index > 1:
                 self.pause_index = 0
 
-        elif event.key == pygame.K_UP:
+        elif event.key == pygame.K_UP or event.key == pygame.K_w:
             self.pause_index -= 1
 
             if self.pause_index < 0:
@@ -159,7 +176,8 @@ class Game:
 
     def _handle_back_keys(self, event: pygame.event.Event) -> None:
         if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
-            if self.state.phase in (ScreenTypes.GAME_OVER, ScreenTypes.VICTORY):
+            if self.state.phase in (ScreenTypes.GAME_OVER,
+                                    ScreenTypes.VICTORY):
                 self.state.phase = ScreenTypes.END_OF_GAME
             else:
                 self.state.phase = ScreenTypes.MENU
@@ -186,6 +204,8 @@ class Game:
     def _handle_waiting_keys(self, event: pygame.event.Event) -> None:
         """Handle input when waiting at the start of a level before ghosts release."""
         if event.key in (pygame.K_RETURN, pygame.K_SPACE) or event.key in DIRECTION_KEY:
+            # === STOP THE INTRO MUSIC HERE ===
+            pygame.mixer.music.stop()
             # Transition from waiting to active gameplay
             self.state.phase = ScreenTypes.PLAYING
             if event.key in DIRECTION_KEY:
@@ -193,12 +213,11 @@ class Game:
         elif event.key == pygame.K_ESCAPE:
             self.state.phase = ScreenTypes.MENU
 
-def main(config_path: str) -> int:
+def main(config_path: str) -> None:
     config = load_config(config_path)
     HIGHSCORE_FILENAME = "highscore.json"
     pygame.init()
     highscores = HighscoreStore(HIGHSCORE_FILENAME)
     state = GameState(config)
-
     app = Game(config)
     app.run()
