@@ -32,6 +32,7 @@ class ScreenTypes(Enum):
 
 
 class GameState:
+    HIT_RADIUS = 0.6
     def __init__(self, config: Config) -> None:
         self.config = config
         self.highscores = HighscoreStore(filename="highscores.json")
@@ -205,7 +206,7 @@ class GameState:
         for ghost in self.ghosts:
             if not (self.cheat.enabled and self.cheat.ghosts_frozen):
                 ghost.update_ai(self.maze, dt, player_cell)
-            if player_cell == (ghost.col, ghost.row):
+            if self._hitting(ghost):
                 if ghost.state is GhostState.FRIGHTENED:
                     self.scoring.award_ghost(self.player)
                     ghost.get_eaten(respawn_delay=3.0)
@@ -256,6 +257,11 @@ class GameState:
             # Remember the ghost's starting position
             ghost.set_home(col, row)
             self.ghosts.append(ghost)
+
+    def _hitting(self, ghost: Ghost) -> bool:
+        px, py = self.player.pixel_position(1)
+        gx, gy = ghost.pixel_position(1)
+        return (px - gx) ** 2 + (py - gy) ** 2 < self.HIT_RADIUS ** 2
 
     def _load_level(self, level_index: int) -> None:
         print("LOADING LEVEL:", level_index + 1)
