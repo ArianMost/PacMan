@@ -223,7 +223,7 @@ def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
                     0,
                     f"{prefix}.points_per_bonus_fruit",
                 ),
-                # walls_color=_parse_hex_color(data.get("walls_color"), f"{prefix}.walls_color"),
+                walls_color=_parse_hex_color(data.get("walls_color"), f"{prefix}.walls_color"),
             )
         )
 
