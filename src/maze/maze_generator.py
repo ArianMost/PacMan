@@ -7,4 +7,5 @@ class MazeGenerator(Protocol):
     def generate(
         self, width: int, height: int, seed: int, perfect: bool
     ) -> list[list[int]]:
+        """Generate a maze grid of the given dimensions and seed."""
         pass

@@ -82,6 +82,7 @@ class GhostState(Enum):
 class Ghost(Entity):
     def __init__(self, col: int, row: int, name: str,
                  color: Tuple[int, int, int]) -> None:
+        """Initialize a ghost entity with its position, name, and color."""
         super().__init__(col=col, row=row)
         self.name: str = name
         self.color: Tuple[int, int, int] = color
@@ -183,14 +184,6 @@ class Ghost(Entity):
 
     def _chase_target(self, player_cell: Cell) -> Cell:
         """Compute the CHASE-mode target cell, varied by ghost personality.
-
-        - blinky: targets the player directly (classic aggressive chaser).
-        - pinky: targets 4 cells ahead of the player (ambush).
-        - inky: targets near the player with randomized jitter
-          (unpredictable).
-        - clyde: chases directly when far away, but flees home once close
-          (the classic "shy" behaviour) so it doesn't pile onto the player.
-        - anything else: falls back to direct chase.
         """
         pcol, prow = player_cell
         # if self.name == "pinky":
@@ -208,6 +201,7 @@ class Ghost(Entity):
         return pcol, prow  # blinky and default
 
     def _update_eaten(self, maze: Maze, dt: float) -> None:
+        """Move the ghost back to its home corner, then revive into CHASE."""
         self.respawn_timer = max(0.0, self.respawn_timer - dt)
         home = (self.home_col, self.home_row)
         current_cell = (self.col, self.row)
@@ -237,6 +231,8 @@ class Ghost(Entity):
                            dt: float,
                            player_cell: Cell) -> None:
         self.frightened_timer = max(0.0, self.frightened_timer - dt)
+        """Frightened ghosts move semi-randomly, but still
+        try to flee from the player."""
 
         self._decide_if_new_cell(maze, player_cell)
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
@@ -245,6 +241,8 @@ class Ghost(Entity):
             self._last_decided_cell = None
 
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
+        """Chase ghosts move toward their target cell,
+        which is determined by their personality."""
         target = self._chase_target(player_cell)
         self._decide_if_new_cell(maze, target)
         self.update(maze, dt, speed_multiplier=self._CHASE_SPEED_MULT)

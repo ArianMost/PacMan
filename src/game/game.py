@@ -24,6 +24,7 @@ FPS = 40
 
 class Game:
     def __init__(self, config: Config) -> None:
+        """Initialize the game with the given configuration."""
         self.config = config
         pygame.init()
         self.highscores = HighscoreStore(self.config.highscore_filename)
@@ -80,6 +81,7 @@ class Game:
         pygame.quit()
 
     def _handle_events(self) -> None:
+        """Handle all pygame events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -167,6 +169,7 @@ class Game:
             print("Level Skipped!")
 
     def _handle_pause_keys(self, event: pygame.event.Event) -> None:
+        """Handle keyboard input while the game is paused."""
         if event.key == pygame.K_DOWN or event.key == pygame.K_s:
             self.pause_index += 1
 
@@ -190,6 +193,7 @@ class Game:
                 self.state.phase = ScreenTypes.MENU
 
     def _handle_back_keys(self, event: pygame.event.Event) -> None:
+        """Handle input for screens that only require a back action."""
         if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
             if self.state.phase in (ScreenTypes.GAME_OVER,
                                     ScreenTypes.VICTORY):

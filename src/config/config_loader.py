@@ -66,6 +66,8 @@ def _remove_comments(text: str) -> str:
 
 
 def _validate_positive_int(val: Any, default_val: int, label: str) -> int:
+    """Validate that a value is a positive
+    integer, returning the default if not."""
     try:
         num = int(val)
         if num <= 0:
@@ -78,7 +80,7 @@ def _validate_positive_int(val: Any, default_val: int, label: str) -> int:
             f"'{default_val}'",
             file=sys.stderr,
         )
-        # return default_val
+        return default_val
 
 
 def _validate_optional_positive_int(val: Any, name: str) -> int | None:
@@ -101,6 +103,8 @@ def _validate_optional_positive_int(val: Any, name: str) -> int | None:
 
 
 def _validate_nonnegative_int(val: Any, default_val: int, label: str) -> int:
+    """Validate that a value is a non-negative integer,
+    returning the default if not."""
     try:
         num = int(val)
         if num < 0:
@@ -135,6 +139,8 @@ def _validate_optional_nonnegative_int(val: Any, name: str) -> int | None:
 
 
 def _validate_optional_str(val: Any, name: str) -> str | None:
+    """Validate that a value is a non-empty string,
+    returning None if not."""
     if val is None:
         return None
     if not isinstance(val, str) or not val.strip():
@@ -147,7 +153,8 @@ def _validate_optional_str(val: Any, name: str) -> str | None:
     return val
 
 
-def _parse_hex_color(val: Any, name: str) -> tuple[int, int, int] | None:
+def _parse_hex_color(val: Any, name: str) -> str | None:
+    """Parse a hex color string like '#1e2ac9' into an RGB tuple."""
     if val is None:
         return None
     if not isinstance(val, str):
@@ -173,14 +180,16 @@ def _parse_hex_color(val: Any, name: str) -> tuple[int, int, int] | None:
     green = int(digits[2:4], 16)
     blue = int(digits[4:6], 16)
 
-    return (red, green, blue)
+    return f"#{red:02x}{green:02x}{blue:02x}"
 
 
 def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
+    """Validate the levels configuration,
+    returning a list of LevelConfig objects."""
     levels: list[LevelConfig] = []
     if not isinstance(raw_levels, list) or not raw_levels:
         print(
-            f"[config] warning: invalid or missing level, " "using defaults",
+            "[config] warning: invalid or missing level, " "using defaults",
             file=sys.stderr,
         )
         raw_levels = DEFAULT_CONFIG["levels"]
@@ -207,23 +216,30 @@ def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
                 height=height,
                 level_number=_validate_optional_positive_int(
                     data.get("level_number"), f"{prefix}.level_number"
-                ),
+                )
+                or i + 1,
                 seed=_validate_optional_nonnegative_int(
                     data.get("seed"), f"{prefix}.seed"
-                ),
+                )
+                or DEFAULT_CONFIG["seed"],
                 level_max_time=_validate_optional_positive_int(
                     data.get("level_max_time"), f"{prefix}.level_max_time"
-                ),
+                )
+                or DEFAULT_CONFIG["level_max_time"],
                 map_filename=_validate_optional_str(
                     data.get("map_filename"), f"{prefix}.map_filename"
-                ),
+                )
+                or "",
                 bonus_fruit_type=str(data.get("bonus_fruit_type", "")).strip(),
                 points_per_bonus_fruit=_validate_nonnegative_int(
                     data.get("points_per_bonus_fruit"),
                     0,
                     f"{prefix}.points_per_bonus_fruit",
                 ),
-                walls_color=_parse_hex_color(data.get("walls_color"), f"{prefix}.walls_color"),
+                walls_color=_parse_hex_color(
+                    data.get("walls_color"), f"{prefix}.walls_color"
+                )
+                or "#1e2ac9",
             )
         )
 
@@ -236,6 +252,9 @@ def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
 
 
 def load_config(config_file: str) -> Config:
+    """Load the configuration from a JSON file, returning a Config object.
+    If the file is missing or malformed, defaults are used.
+    """
     config_text = ""
 
     try:
@@ -259,7 +278,7 @@ def load_config(config_file: str) -> Config:
                 config_data = parsed
             else:
                 print(
-                    f"[config] warning: config root is not a "
+                    "[config] warning: config root is not a "
                     "JSON object; using defaults",
                     file=sys.stderr,
                 )

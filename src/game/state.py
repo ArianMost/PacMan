@@ -35,6 +35,7 @@ class GameState:
     HIT_RADIUS = 0.6
 
     def __init__(self, config: Config) -> None:
+        """Initialize the game state with the given configuration."""
         self.config = config
         self.highscores = HighscoreStore(filename="highscores.json")
         self.player = Player(config.lives)
@@ -242,15 +243,18 @@ class GameState:
                                 self.death_sound.play()
 
     def handle_player_direction(self, direction: Direction) -> None:
+        """Handle player input for changing direction."""
         self.player.next_direction = direction
 
     def handle_pause(self) -> None:
+        """Toggle between PAUSED and PLAYING states."""
         if self.phase == ScreenTypes.PLAYING:
             self.phase = ScreenTypes.PAUSED
         elif self.phase == ScreenTypes.PAUSED:
             self.phase = ScreenTypes.PLAYING
 
     def _create_ghosts(self) -> None:
+        """Create ghosts based on the maze configuration."""
         self.ghosts = []
 
         for i in range(len(GHOST_NAMES_COLORS)):
@@ -278,11 +282,13 @@ class GameState:
             self.ghosts.append(ghost)
 
     def _hitting(self, ghost: Ghost) -> bool:
+        """Check if the player is colliding with a ghost."""
         px, py = self.player.pixel_position(1)
         gx, gy = ghost.pixel_position(1)
         return (px - gx) ** 2 + (py - gy) ** 2 < self.HIT_RADIUS ** 2
 
     def _load_level(self, level_index: int) -> None:
+        """Load the specified level, resetting the maze, ghosts, and player."""
         print("LOADING LEVEL:", level_index + 1)
         levels = self.config.levels
         level_config = levels[level_index % len(levels)]
@@ -329,6 +335,8 @@ class GameState:
         # self.level_protection_timer = 0.5
 
     def advance_level(self) -> None:
+        """Advance to the next level, or end
+        the game if all levels are completed."""
         print("ADVANCING LEVEL")
         # Play the level win sound effect
         if hasattr(self, "level_win_sound") and self.level_win_sound:
@@ -343,6 +351,7 @@ class GameState:
         self.phase = ScreenTypes.WAITING_TO_START
 
     def restart_current_level(self) -> None:
+        """Restart the current level, resetting the player and ghosts."""
         # Reset Pac-Man and ghosts, but keep the pellets already eaten
         self.player.respawn(*self.maze.player_sp)
         for ghost in self.ghosts:

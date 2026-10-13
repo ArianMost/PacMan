@@ -15,12 +15,14 @@ from src.game.game import main  # noqa: E402
 
 
 def _usage_error(message: str) -> int:
+    """Print an error message and usage instructions to stderr."""
     print(f"error: {message}", file=sys.stderr)
     print("usage: python3 pac-man.py <config.json>", file=sys.stderr)
     return 1
 
 
 def run() -> int:
+    """Run the Pac-Man game with the specified configuration file."""
     if len(sys.argv) != 2:
         return _usage_error(
             "exactly one argument is required (the config file)"

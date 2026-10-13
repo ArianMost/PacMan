@@ -107,6 +107,7 @@ class Display:
                        headers: list[str],
                        rows: list[tuple[str, str, str]],
                        col_widths: list[int]) -> int:
+            """Draw a table with a title, headers, and rows."""
             row_height = 20
             header_height = 22
             x = start_x
