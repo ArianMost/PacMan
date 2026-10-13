@@ -30,7 +30,14 @@ class Game:
         self.state = GameState(self.config)
         self.menu_index = 0
         self.pause_index = 0
-        self.display = Display(self.config, self.highscores, self.state, self.menu_index, self.pause_index)
+        self.display = Display(
+            self.config,
+            self.highscores,
+            self.state,
+            self.menu_index,
+            self.pause_index,
+        )
+        self.intro_music_played = False
         self.running = True
 
     def run(self) -> None:
@@ -42,23 +49,26 @@ class Game:
             dt = clock.tick(FPS) / 1000.0
             # === PLAY START/MENU MUSIC HERE (Runs every frame) ===
             should_play_music = (
-                self.state.phase == ScreenTypes.MENU or
-                (self.state.phase == ScreenTypes.WAITING_TO_START and
-                 self.state.current_level_index == 0 and
-                 not getattr(self.state, "intro_music_played", False))
+                self.state.phase == ScreenTypes.MENU
+                or (
+                    self.state.phase == ScreenTypes.WAITING_TO_START
+                    and self.state.current_level_index == 0
+                    and not self.intro_music_played
+                )
             )
 
             if should_play_music:
-                if hasattr(self.state, "start_music_path") and self.state.start_music_path and not pygame.mixer.music.get_busy():
+                music_path = self.state.start_music_path
+                if music_path and not pygame.mixer.music.get_busy():
                     try:
-                        pygame.mixer.music.load(self.state.start_music_path)
+                        pygame.mixer.music.load(music_path)
                         pygame.mixer.music.set_volume(1.0)
                         pygame.mixer.music.play(loops=-1)
                     except Exception as e:
                         print(f"Error playing music: {e}")
             # If we enter PLAYING mode, ensure the flag is marked as played
             if self.state.phase == ScreenTypes.PLAYING:
-                self.state.intro_music_played = True
+                self.intro_music_played = True
             self._handle_events()
             if self.state.phase is ScreenTypes.PLAYING:
                 self.state.update(dt)
@@ -87,7 +97,12 @@ class Game:
                     self._handle_waiting_keys(event)
                 case ScreenTypes.PAUSED:
                     self._handle_pause_keys(event)
-                case ScreenTypes.INSTRUCTIONS | ScreenTypes.HIGH_SCORES | ScreenTypes.VICTORY | ScreenTypes.GAME_OVER:
+                case (
+                    ScreenTypes.INSTRUCTIONS
+                    | ScreenTypes.HIGH_SCORES
+                    | ScreenTypes.VICTORY
+                    | ScreenTypes.GAME_OVER
+                ):
                     self._handle_back_keys(event)
                 case ScreenTypes.END_OF_GAME:
                     self._handle_name_entry(event)
@@ -186,7 +201,10 @@ class Game:
         """Handle typing a name to save on the highscore list."""
         if event.key == pygame.K_RETURN:
             if self.state.name_player.strip():
-                self.highscores.add(self.state.name_player, self.state.player.score)
+                self.highscores.add(
+                    self.state.name_player,
+                    self.state.player.score,
+                )
                 self.highscores.save()
                 self.state.phase = ScreenTypes.MENU
 
@@ -198,12 +216,19 @@ class Game:
 
         else:
             char = event.unicode
-            if char and char.isprintable() and len(self.state.name_player) < 15:
+            if (
+                char
+                and char.isprintable()
+                and len(self.state.name_player) < 15
+            ):
                 self.state.name_player += char
 
     def _handle_waiting_keys(self, event: pygame.event.Event) -> None:
-        """Handle input when waiting at the start of a level before ghosts release."""
-        if event.key in (pygame.K_RETURN, pygame.K_SPACE) or event.key in DIRECTION_KEY:
+        """Handle input while waiting for the level to start."""
+        if (
+            event.key in (pygame.K_RETURN, pygame.K_SPACE)
+            or event.key in DIRECTION_KEY
+        ):
             # === STOP THE INTRO MUSIC HERE ===
             pygame.mixer.music.stop()
             # Transition from waiting to active gameplay
@@ -213,11 +238,8 @@ class Game:
         elif event.key == pygame.K_ESCAPE:
             self.state.phase = ScreenTypes.MENU
 
+
 def main(config_path: str) -> None:
     config = load_config(config_path)
-    HIGHSCORE_FILENAME = "highscore.json"
-    pygame.init()
-    highscores = HighscoreStore(HIGHSCORE_FILENAME)
-    state = GameState(config)
     app = Game(config)
     app.run()

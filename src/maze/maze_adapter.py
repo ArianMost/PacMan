@@ -1,5 +1,5 @@
 import sys
-from typing import Deque
+from typing import Deque, cast
 from collections import deque
 from src.maze.maze import Maze
 from src.maze.maze_generator import MazeGenerator
@@ -21,7 +21,7 @@ class ExternalGeneratorAdapter:
             perfect=perfect,
             seed=seed,
         )
-        return generator.maze
+        return cast(list[list[int]], generator.maze)
 
 
 class MazeAdapter:
@@ -67,7 +67,6 @@ class MazeAdapter:
         player_col, player_row = cols // 2, rows // 2
         return MazeAdapter._find_nearest_open(grid, cols,
                                               rows, player_col, player_row)
-
 
     @staticmethod
     def _find_nearest_open(

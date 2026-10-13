@@ -33,9 +33,13 @@ class Display:
         pygame.display.set_caption("Pac-Man")
         self.big_font = pygame.font.Font(None, 64)
         self.small_font = pygame.font.Font(None, 36)
+        self.tiny_font = pygame.font.SysFont("Arial", 14)
         self.menu_selected = menu_index
         self.pause_selected = pause_index
-        self.ghost_images: dict[GhostState, pygame.Surface] = {}
+        self.ghost_images: dict[tuple[str, ...], pygame.Surface | None] = {}
+        self.pacman_images: dict[
+            tuple[str, str, str], pygame.Surface | None
+        ] = {}
         self._last_checked_level = -1
 
     def update_window_for_level(self) -> None:
@@ -47,9 +51,9 @@ class Display:
 
             # Define different window resolutions for each level index
             level_resolutions = {
-                0: (800, 630),   # Level 1 size
-                1: (800, 630),   # Level 2 size (Bigger window)
-                2: (800, 640),  # Level 3 size (Even bigger window)
+                0: (800, 630),
+                1: (800, 630),
+                2: (800, 640),
                 3: (800, 640),
                 4: (800, 640),
                 5: (900, 700),
@@ -89,20 +93,113 @@ class Display:
         self._draw_hint("Arrows/WASD to move, Enter to select")
 
     def _draw_instructions(self) -> None:
-        """Draw the game controls and rules."""
-        self.surface.fill(BLACK)
-        self._draw_title("Instructions", y=80)
+        """Draw the game instructions, scoring,
+        and cheat tables graphically in Pygame."""
+        self.surface.fill((10, 10, 30))
 
-        lines = [
-            "Move with the arrow keys or WASD.",
-            "Eat every pacgum to clear the level.",
-            "Super-pacgums make ghosts frightened.",
-            "Eat frightened ghosts to gain bonus points.",
-            "Touching a normal ghost costs one life.",
-            "Clear all levels to win the game.",
+        # Title
+        self._draw_title("Game Guide & Instructions", y=20)
+
+        # Helper function to render a structured table
+        def draw_table(start_x: int,
+                       start_y: int,
+                       title: str,
+                       headers: list[str],
+                       rows: list[tuple[str, str, str]],
+                       col_widths: list[int]) -> int:
+            row_height = 20
+            header_height = 22
+            x = start_x
+            y = start_y
+
+            # Draw Section Title
+            if hasattr(self, "font") and self.font:
+                title_surf = self.font.render(title, True, (255, 255, 0))
+                self.surface.blit(title_surf, (x, y))
+            y += 28
+
+            # Draw Table Headers
+            header_bg = pygame.Rect(x, y, sum(col_widths), row_height)
+            pygame.draw.rect(self.surface, (80, 80, 160), header_bg)
+
+            hx = x + 5
+            for i, header in enumerate(headers):
+                if hasattr(self, "small_font") and self.tiny_font:
+                    h_surf = self.tiny_font.render(header, True,
+                                                   (255, 255, 255))
+                    self.surface.blit(h_surf, (hx, y + 3))
+                hx += col_widths[i]
+            pygame.draw.rect(self.surface, (80, 80, 150), header_bg, 1)
+            y += header_height
+
+            # Draw Table Rows
+            for r_idx, row in enumerate(rows):
+                row_bg_color = (25, 25, 45) if r_idx % 2 == 0 else (15, 15, 30)
+                row_rect = pygame.Rect(x, y, sum(col_widths), row_height)
+                pygame.draw.rect(self.surface, row_bg_color, row_rect)
+
+                rx = x + 5
+                for c_idx, cell_text in enumerate(row):
+                    if hasattr(self, "small_font") and self.tiny_font:
+                        c_surf = self.tiny_font.render(cell_text, True,
+                                                       (200, 200, 200))
+                        self.surface.blit(c_surf, (rx, y + 3))
+                    rx += col_widths[c_idx]
+
+                # Draw row border outline
+                pygame.draw.rect(self.surface, (60, 60, 90), row_rect, 1)
+                y += row_height
+
+            return y + 15  # Return next Y position with spacing
+
+        # Define table datasets
+        control_headers = ["Action", "Key(s)", "Description"]
+        control_rows = [
+            ("Move Up", "W or UP", "Navigate upward"),
+            ("Move Left", "A or LEFT", "Navigate leftward"),
+            ("Move Down", "S or DOWN", "Navigate downward"),
+            ("Move Right", "D or RIGHT", "Navigate rightward"),
+            ("Pause/Resume", "P or ESC", "Pause active game"),
+            ("Confirm/Start", "Enter / Space", "Start level/menu"),
         ]
 
-        self._draw_lines(lines, start_y=160)
+        scoring_headers = ["Item / Entity", "Points", "Notes"]
+        scoring_rows = [
+            ("Standard Gum", "10 pts", "Regular maze dots"),
+            ("Super-Pacgum", "50 pts", "4 corners (power mode)"),
+            ("Eating Ghost", "200 pts", "Vulnerable ghosts"),
+            ("Bonus Fruit", "1k-5k pts", "Varies by level"),
+        ]
+
+        cheat_headers = ["Key", "Cheat Function", "Description"]
+        cheat_rows = [
+            ("F1", "Master Switch", "Enable/Disable cheats"),
+            ("F2", "Invincibility", "No life lost on hit"),
+            ("F3", "Freeze Ghosts", "Stop all ghosts"),
+            ("F4", "Speed Boost", "Move faster"),
+            ("F5", "Extra Life", "Grant +1 life"),
+            ("F6", "Level Skip", "Jump to next level"),
+        ]
+
+        # Render tables cleanly onto the screen
+        # (adjusting widths and positions)
+        current_y = 45
+        col_w = [150, 150, 260]
+        start_x = (self.surface.get_width() - sum(col_w)) // 2
+
+        current_y = draw_table(start_x, current_y, "Controls & Navigation",
+                               control_headers, control_rows, col_w)
+        current_y = draw_table(start_x, current_y, "Scoring System",
+                               scoring_headers, scoring_rows, col_w)
+        current_y = draw_table(
+            start_x,
+            current_y,
+            "Cheat Mode (Toggle with F1)",
+            cheat_headers,
+            cheat_rows,
+            col_w,
+        )
+        # Return hint at the bottom
         self._draw_hint("Press ESC or Enter to return")
 
     def _draw_highscores(self) -> None:
@@ -240,7 +337,8 @@ class Display:
         self.surface.blit(overlay, (0, 0))
 
         self._draw_title("GET READY", y=250)
-        self._draw_lines(["Press SPACE to start", "Press ESC for menu"], start_y=320)
+        self._draw_lines(["Press SPACE to start", "Press ESC for menu"],
+                         start_y=320)
 
     def draw(self) -> None:
         """Draw the screen that matches the current menu phase."""
@@ -309,9 +407,9 @@ class Display:
         )
         self.surface.blit(time_surface, time_rect)
 
-
     def _draw_game(self) -> None:
-        """Draw the maze using bitmask wall lines, pellets, entities, and HUD."""
+        """Draw the maze using bitmask wall lines,
+        pellets, entities, and HUD."""
         self.surface.fill(BLACK)
 
         if not hasattr(self.state, "maze") or not self.state.maze:
@@ -328,7 +426,7 @@ class Display:
         cols = maze.cols if hasattr(maze, "cols") else len(grid[0])
 
         current_width = self.surface.get_width()
-        current_height = self.surface.get_height()
+        # current_height = self.surface.get_height()
         hud_space = 80
         available_width = WINDOW_WIDTH - 40
         available_height = WINDOW_HEIGHT - hud_space - 20
@@ -340,12 +438,14 @@ class Display:
         maze_pixel_width = cols * cell_size
         maze_pixel_height = rows * cell_size
         offset_x = max(30, (current_width - maze_pixel_width) // 2)
-        min_top_margin = hud_space + 10
-        calculated_offset_y = hud_space + (available_height - maze_pixel_height) // 2
+        # min_top_margin = hud_space + 10
+        calculated_offset_y = hud_space + (available_height -
+                                           maze_pixel_height) // 2
         offset_y = max(hud_space + 10, calculated_offset_y) + 15
 
         # Draw components modularly
-        self._draw_maze_walls(grid, rows, cols, offset_x, offset_y, cell_size, maze_pixel_width, maze_pixel_height)
+        self._draw_maze_walls(grid, rows, cols, offset_x, offset_y,
+                              cell_size, maze_pixel_width, maze_pixel_height)
         self._draw_pellets(offset_x, offset_y, cell_size)
         self._draw_super_gums(offset_x, offset_y, cell_size)
         self._draw_pacman(offset_x, offset_y, cell_size)
@@ -355,10 +455,25 @@ class Display:
         # Draw the HUD on top
         self._draw_hud()
 
-    def _draw_maze_walls(self, grid, rows, cols, offset_x, offset_y, cell_size, maze_pixel_width, maze_pixel_height) -> None:
+    def _draw_maze_walls(
+        self,
+        grid: list[list[int]],
+        rows: int,
+        cols: int,
+        offset_x: int,
+        offset_y: int,
+        cell_size: int,
+        maze_pixel_width: int,
+        maze_pixel_height: int,
+    ) -> None:
         """Draw maze walls via bitmask lines and outer boundary."""
-        wall_color = self.config.levels[self.state.current_level_index].walls_color or (30, 30, 200)
-        pygame.draw.rect(self.surface, wall_color, (offset_x, offset_y, maze_pixel_width, maze_pixel_height), 3)
+        wall_color = (
+            self.config.levels[self.state.current_level_index].walls_color
+            or (30, 30, 200)
+        )
+        pygame.draw.rect(self.surface, wall_color, (offset_x, offset_y,
+                                                    maze_pixel_width,
+                                                    maze_pixel_height), 3)
 
         for row_idx, row in enumerate(grid):
             for col_idx, cell_value in enumerate(row):
@@ -376,15 +491,28 @@ class Display:
 
                 wall_thickness = max(2, cell_size // 8)
                 if cell_value & 1:  # UP
-                    pygame.draw.line(self.surface, wall_color, (x, y), (x + cell_size, y), wall_thickness)
+                    pygame.draw.line(self.surface, wall_color, (x, y),
+                                     (x + cell_size, y), wall_thickness)
                 if cell_value & 2:  # RIGHT
-                    pygame.draw.line(self.surface, wall_color, (x + cell_size, y), (x + cell_size, y + cell_size), wall_thickness)
+                    pygame.draw.line(self.surface, wall_color,
+                                     (x + cell_size, y),
+                                     (x + cell_size, y + cell_size),
+                                     wall_thickness)
                 if cell_value & 4:  # DOWN
-                    pygame.draw.line(self.surface, wall_color, (x, y + cell_size), (x + cell_size, y + cell_size), wall_thickness)
+                    pygame.draw.line(self.surface, wall_color,
+                                     (x, y + cell_size),
+                                     (x + cell_size, y + cell_size),
+                                     wall_thickness)
                 if cell_value & 8:  # LEFT
-                    pygame.draw.line(self.surface, wall_color, (x, y), (x, y + cell_size), wall_thickness)
+                    pygame.draw.line(self.surface,
+                                     wall_color, (x, y),
+                                     (x, y + cell_size),
+                                     wall_thickness)
 
-    def _draw_pellets(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+    def _draw_pellets(self,
+                      offset_x: int,
+                      offset_y: int,
+                      cell_size: int) -> None:
         """Draw standard pacgums."""
         if hasattr(self.state, "pellets") and self.state.pellets:
             if hasattr(self.state.pellets, "pacgums"):
@@ -405,7 +533,8 @@ class Display:
                 for scol, srow in super_gums:
                     px = offset_x + scol * cell_size + cell_size // 2
                     py = offset_y + srow * cell_size + cell_size // 2
-                    pygame.draw.circle(self.surface, (255, 255, 180), (px, py), max(4, cell_size // 3))
+                    pygame.draw.circle(self.surface, (255, 255, 180),
+                                       (px, py), max(4, cell_size // 3))
 
     def _draw_pacman(self, offset_x: int, offset_y: int,
                      cell_size: int) -> None:
@@ -416,8 +545,6 @@ class Display:
         px, py = self.state.player.pixel_position(cell_size)
         draw_x = int(offset_x + px)
         draw_y = int(offset_y + py)
-        if not hasattr(self, "pacman_images"):
-            self.pacman_images = {}
         current_time = pygame.time.get_ticks()
         dir_str = "right"
         player_dir = getattr(self.state.player, "direction", getattr(
@@ -434,12 +561,14 @@ class Display:
 
         is_dying = getattr(self.state, "is_dying", False)
         if is_dying:
-            # Total death duration is 1.2 seconds.Calculate elapsed time from death_timer.
+            # Total death duration is 1.2 seconds.Calculate
+            # elapsed time from death_timer.
             total_duration = 1.2
             death_timer = getattr(self.state, "death_timer", total_duration)
             elapsed = total_duration - death_timer
 
-            # Divide elapsed time evenly across 3 frames (0.4 seconds per frame)
+            # Divide elapsed time evenly across 3 frames
+            # (0.4 seconds per frame)
             # Clamp between 1 and 3 so it never exceeds 3 or loops
             anim_frame = int(elapsed / (total_duration / 3)) + 1
             anim_frame = max(1, min(3, anim_frame))
@@ -448,7 +577,8 @@ class Display:
         elif self.state.player.direction is Direction.NONE:
             action_str = "start"
         else:
-            # Keep global ticks for normal eating animation so it loops smoothly while moving
+            # Keep global ticks for normal eating animation so it
+            # loops smoothly while moving
             anim_frame = (current_time // 250) % 3 + 1
             action_str = f"eat{anim_frame}"
 
@@ -475,7 +605,6 @@ class Display:
                     f"images/pac_man/pac_man_{action_str}.png",
                     "src/images/pac_man.png",
                 ]
-
             loaded_img = None
             for path in paths:
                 try:
@@ -486,7 +615,6 @@ class Display:
             self.pacman_images[cache_key] = loaded_img
 
         img = self.pacman_images.get(cache_key)
-
         if img:
             p_width = int(cell_size * 1)
             p_height = int(cell_size * 1)
@@ -497,33 +625,36 @@ class Display:
         else:
             center_x = draw_x + cell_size // 2
             center_y = draw_y + cell_size // 2
-            pygame.draw.circle(self.surface, YELLOW, (center_x, center_y), cell_size // 2 - 2)
+            pygame.draw.circle(self.surface, YELLOW, (center_x, center_y),
+                               cell_size // 2 - 2)
 
     def _draw_ghosts(self, offset_x: int, offset_y: int,
                      cell_size: int) -> None:
-        """Draw ghosts with frightened, flashing, eyes, and directional states."""
+        """Draw ghosts with frightened, flashing,
+        eyes, and directional states."""
         if not (hasattr(self.state, "ghosts") and self.state.ghosts):
             return
 
         current_time = pygame.time.get_ticks()
-        for ghost in self.state.ghosts:
-            gx, gy = ghost.pixel_position(cell_size)
-            ghost_name = getattr(ghost, "name", "blinky").lower()
+        for game_ghost in self.state.ghosts:
+            gx, gy = game_ghost.pixel_position(cell_size)
+            ghost_name = getattr(game_ghost, "name", "blinky").lower()
 
             state_suffix = ""
-            if hasattr(ghost, "state"):
-                if ghost.state == GhostState.FRIGHTENED:
-                    state_suffix = "frightened"
-                    frightened_timer = getattr(ghost, "frightened_timer", 2.0)
-                    if frightened_timer < 2.0:
-                        if (current_time // 300) % 2 == 0:
-                            state_suffix = "frightened_flash"
-                elif ghost.state == GhostState.EATEN:
-                    state_suffix = "eyes"
+            if game_ghost.state == GhostState.FRIGHTENED:
+                state_suffix = "frightened"
+                frightened_timer = getattr(
+                    game_ghost, "frightened_timer", 2.0
+                )
+                if frightened_timer < 2.0:
+                    if (current_time // 300) % 2 == 0:
+                        state_suffix = "frightened_flash"
+            elif game_ghost.state == GhostState.EATEN:
+                state_suffix = "eyes"
 
             dir_str = "left"
-            if hasattr(ghost, "direction") and ghost.direction:
-                d_name = ghost.direction.name.lower()
+            if game_ghost.direction:
+                d_name = game_ghost.direction.name.lower()
                 if d_name in ("up", "down", "left", "right"):
                     dir_str = d_name
 
@@ -564,7 +695,8 @@ class Display:
             if img:
                 ghost_width = int(cell_size * 0.75)
                 ghost_height = int(cell_size * 1.25)
-                scaled_img = pygame.transform.scale(img, (ghost_width, ghost_height))
+                scaled_img = pygame.transform.scale(img, (ghost_width,
+                                                          ghost_height))
                 draw_x = int(offset_x + gx + (cell_size - ghost_width) // 2)
                 draw_y = int(offset_y + gy)
                 self.surface.blit(scaled_img, (draw_x, draw_y))
@@ -574,22 +706,25 @@ class Display:
                 g_center_x = draw_x + cell_size // 2
                 g_center_y = draw_y + cell_size // 2
 
-                if hasattr(ghost, "state") and ghost.state == GhostState.FRIGHTENED:
+                if game_ghost.state is GhostState.FRIGHTENED:
                     ghost_color = (0, 0, 255)
-                elif hasattr(ghost, "state") and ghost.state == GhostState.EATEN:
+                elif game_ghost.state is GhostState.EATEN:
                     ghost_color = (150, 150, 150)
                 else:
-                    ghost_color = getattr(ghost, "color", (255, 0, 0))
-                    if isinstance(ghost_color, str) and ghost_color.startswith("#"):
-                        ghost_color = tuple(int(ghost_color[i:i+2], 16) for i in (1, 3, 5))
+                    ghost_color = game_ghost.color
+                pygame.draw.circle(self.surface, ghost_color,
+                                   (g_center_x, g_center_y),
+                                   cell_size // 2 - 2)
 
-                pygame.draw.circle(self.surface, ghost_color, (g_center_x, g_center_y), cell_size // 2 - 2)
-
-    def _draw_fruit(self, offset_x: int, offset_y: int, cell_size: int) -> None:
+    def _draw_fruit(self, offset_x: int,
+                    offset_y: int,
+                    cell_size: int) -> None:
         """Draw bonus fruit if active."""
         if self.state.fruit_cell is not None:
-            level_cfg = self.state.config.levels[self.state.current_level_index]
-            fruit_name = str(getattr(level_cfg, "bonus_fruit_type", "Cherry")).lower()
+            level_cfg = self.state.config.levels[self.state.
+                                                 current_level_index]
+            fruit_name = str(getattr(level_cfg,
+                                     "bonus_fruit_type", "Cherry")).lower()
             fruit_filename = fruit_name.replace(" ", "_")
             fcol, frow = self.state.fruit_cell
             fx = offset_x + fcol * cell_size + cell_size // 2
@@ -617,9 +752,10 @@ class Display:
             f_img = self.ghost_images.get(cache_key)
             if f_img:
 
-                f_width = int(cell_size * 1.0)
-                f_height = int(cell_size * 1.0)
-                scaled_fruit = pygame.transform.scale(f_img, (f_width, f_height))
+                f_width = int(cell_size * 1.4)
+                f_height = int(cell_size * 1.85)
+                scaled_fruit = pygame.transform.scale(f_img,
+                                                      (f_width, f_height))
                 f_draw_x = fx - f_width // 2
                 f_draw_y = fy - f_height // 2
 

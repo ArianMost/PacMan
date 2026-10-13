@@ -33,6 +33,7 @@ class ScreenTypes(Enum):
 
 class GameState:
     HIT_RADIUS = 0.6
+
     def __init__(self, config: Config) -> None:
         self.config = config
         self.highscores = HighscoreStore(filename="highscores.json")
@@ -46,11 +47,21 @@ class GameState:
                                ghosts_sp=[(0, 0)], player_sp=(0, 0))
         self.maze_adapter = MazeAdapter()
         self.current_level_index: int = 0
-        self.fruit_cell: tuple | None = None
+        self.fruit_cell: tuple[int, int] | None = None
         self.fruit_timer: float = 0.0
         self.level_time_remained = float(config.level_max_time)
+        self.is_dying = False
+        self.death_timer = 0.0
+        self.fruit_spawned_this_level = False
         self.cheat = CheatMode()
         self.name_player = ""
+        self.death_sound: pygame.mixer.Sound | None = None
+        self.level_win_sound: pygame.mixer.Sound | None = None
+        self.start_music_path: str | None = None
+        self.pacgum_sound: pygame.mixer.Sound | None = None
+        self.super_pacgum_sound: pygame.mixer.Sound | None = None
+        self.fruit_sound: pygame.mixer.Sound | None = None
+        self.ghost_eaten_sound: pygame.mixer.Sound | None = None
         try:
             pygame.mixer.init()
             self.death_sound = pygame.mixer.Sound("audio/pac_man_death.wav")
@@ -136,7 +147,7 @@ class GameState:
 
     def update(self, dt: float) -> None:
         """Update the game for one frame."""
-        if getattr(self, "is_dying", False):
+        if self.is_dying:
             self.death_timer -= dt
             if self.death_timer <= 0:
                 self.is_dying = False
@@ -169,27 +180,32 @@ class GameState:
             for ghost in self.ghosts:
                 ghost.frighten(duration=FRIGHTENED_DURATION)
             # === PLAY SUPER PAC-GUM SOUND ===
-            if hasattr(self, "super_pacgum_sound") and self.super_pacgum_sound:
+            if self.super_pacgum_sound is not None:
                 self.super_pacgum_sound.play()
         if self.pellets.remaining() == 0:
             self.advance_level()
             return
 
-        if not hasattr(self, "fruit_spawned_this_level"):
-            self.fruit_spawned_this_level = False
-        ## Spawn fruit only once when a specific threshold of pacgums is reached
-        if self.fruit_cell is None and not self.fruit_spawned_this_level:
-            if len(self.pellets.pacgums) > 0 and len(self.pellets.pacgums) <= 20:
-                open_cells = [
-                    (c, r) for r in range(self.maze.rows) for c in range(self.maze.cols)
-                    if self.maze.is_walkable(c, r)
-                ]
-                if open_cells:
-                    self.fruit_cell = random.choice(open_cells)
-                    self.fruit_timer = 10.0  # Fruit stays for 10 seconds
-                    self.fruit_spawned_this_level = True
+        # Spawn fruit only once when a specific
+        # threshold of pacgums is reached
+        if (
+            self.fruit_cell is None
+            and not self.fruit_spawned_this_level
+            and 0 < len(self.pellets.pacgums) <= 20
+        ):
+            open_cells = [
+                (c, r)
+                for r in range(self.maze.rows)
+                for c in range(self.maze.cols)
+                if self.maze.is_walkable(c, r)
+            ]
+            if open_cells:
+                self.fruit_cell = random.choice(open_cells)
+                self.fruit_timer = 10.0  # Fruit stays for 10 seconds
+                self.fruit_spawned_this_level = True
 
-        # Countdown fruit timer or handle eating collision (WITHOUT premature return)
+        # Countdown fruit timer or handle eating collision
+        # (WITHOUT premature return)
         if self.fruit_cell is not None:
             self.fruit_timer -= dt
             if self.fruit_timer <= 0:
@@ -200,7 +216,7 @@ class GameState:
                 self.fruit_cell = None
 
                 # === PLAY FRUIT SOUND HERE ===
-                if hasattr(self, "fruit_sound") and self.fruit_sound:
+                if self.fruit_sound is not None:
                     self.fruit_sound.play()
 
         for ghost in self.ghosts:
@@ -211,22 +227,17 @@ class GameState:
                     self.scoring.award_ghost(self.player)
                     ghost.get_eaten(respawn_delay=3.0)
 
-                    # === PLAY SOUND WHEN EATING A FRIGHTENED GHOST ===
-                    if hasattr(self, "ghost_eaten_sound") and self.ghost_eaten_sound:
+                    # Play a sound when eating a frightened ghost.
+                    if self.ghost_eaten_sound is not None:
                         self.ghost_eaten_sound.play()
 
                 elif ghost.state is GhostState.CHASE:
                     if not (self.cheat.enabled and self.cheat.invincible):
-                        if not getattr(self, "is_dying", False):
+                        if not self.is_dying:
                             self.is_dying = True
                             self.death_timer = 1.2
-                        # self.player.lose_life()
-                        # if self.player.lives <= 0:
-                        #     self.phase = ScreenTypes.GAME_OVER
-                        # else:
-                        #     self.restart_current_level()
                             # === PLAY DEATH SOUND HERE ===
-                            if hasattr(self, "death_sound") and self.death_sound:
+                            if self.death_sound is not None:
                                 self.death_sound.set_volume(1.0)
                                 self.death_sound.play()
 
@@ -245,14 +256,22 @@ class GameState:
         for i in range(len(GHOST_NAMES_COLORS)):
             # Get the ghost's name and color
             name = GHOST_NAMES_COLORS[i][0]
-            color = GHOST_NAMES_COLORS[i][1]
+            configured_color = pygame.Color(GHOST_NAMES_COLORS[i][1])
+            color = (
+                configured_color.r,
+                configured_color.g,
+                configured_color.b,
+            )
 
             # Get the ghost's starting position
             col = self.maze.ghosts_sp[i][0]
             row = self.maze.ghosts_sp[i][1]
 
             # Create the ghost
-            ghost = Ghost(col=col, row=row, name=name, color=color)
+            ghost = Ghost(col=col,
+                          row=row,
+                          name=name,
+                          color=color)
 
             # Remember the ghost's starting position
             ghost.set_home(col, row)
@@ -300,7 +319,10 @@ class GameState:
             exclude=occupied_cells,
             max_pacgums=self.config.pacgum,
         )
-        self.level_time_remained = float(level_config.level_max_time) or float(self.config.level_max_time)
+        self.level_time_remained = (
+            float(level_config.level_max_time)
+            or float(self.config.level_max_time)
+        )
         # Reset fruit state for the new level
         self.fruit_cell = None
         self.fruit_spawned_this_level = False
