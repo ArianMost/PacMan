@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "highscore_filename": "highscores.json",
     "lives": 3,
@@ -13,26 +14,26 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "cell_size": 24,
     "levels": [
         {
-            "level_number": 1,
-            "width": 30,
-            "height": 23,
-            "seed": 12,
-            "level_max_time": 65,
-            "map_filename": "inc/maps/maze-1.txt",
-            "bonus_fruit_type": "Cherry",
-            "points_per_bonus_fruit": 200,
+        "level_number": 1,
+        "width": 19,
+        "height": 13,
+        "seed": 505,
+        "level_max_time": 130,
+        "bonus_fruit_type": "Banana",
+        "points_per_bonus_fruit": 700,
+        "walls_color": "#f4a261"
         },
         {
-            "level_number": 2,
-            "width": 14,
-            "height": 10,
-            "map_filename": "inc/maps/maze.txt",
-            "level_max_time": 90,
-            "bonus_fruit_type": "Strawberry",
-            "points_per_bonus_fruit": 300,
-            "walls_color": "#1e2ac9",
+        "level_number": 2,
+        "width": 19,
+        "height": 15,
+        "seed": 606,
+        "level_max_time": 145,
+        "bonus_fruit_type": "Melon",
+        "points_per_bonus_fruit": 1000,
+        "walls_color": "#2a9d8f"
         },
-    ],
+    ]
 }
 
 
@@ -50,11 +51,8 @@ class LevelConfig:
     points_per_bonus_fruit: int = 100
     walls_color: str = "#1e2ac9"
 
-
 @dataclass
 class Config:
-    """Game configuration settings."""
-
     highscore_filename: str = DEFAULT_CONFIG["highscore_filename"]
     lives: int = DEFAULT_CONFIG["lives"]
     pacgum: int = DEFAULT_CONFIG["pacgum"]
