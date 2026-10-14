@@ -66,10 +66,11 @@ def _step_toward(maze: Maze, start: Cell, dist: dict[Cell, int]) -> Direction:
     ]
 
     # 70% chance to choose a best direction,
-    if random.random() < 0.7:
-        return random.choice(best)
+    # if random.random() < 0.7:
+    #     return random.choice(best)
 
-    return random.choice([d for d, _ in options])
+    # return random.choice([d for d, _ in options])
+    return random.choice(best)
 
 
 class GhostState(Enum):
@@ -210,6 +211,7 @@ class Ghost(Entity):
         current_cell = (self.col, self.row)
 
         if current_cell == home:
+            self.snap(self.col, self.row)
             self.direction = Direction.NONE
             self.next_direction = Direction.NONE
             self._home_distance_field = None
@@ -241,7 +243,7 @@ class Ghost(Entity):
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
             self.state = GhostState.CHASE
-            self._last_decided_cell = None
+            # self._last_decided_cell = None
 
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Chase ghosts move toward their target cell,

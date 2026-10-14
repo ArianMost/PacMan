@@ -66,7 +66,6 @@ class Entity:
         self.direction = direction
         self.next_direction = next_direction
         self._progress = 0.0
-    # how far the entity has moved from its current cell toward the next cell.
 
     def snap(self, col: int, row: int) -> None:
         """Move the entity immediately to a cell and stop its movement."""
