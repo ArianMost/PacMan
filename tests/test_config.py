@@ -29,3 +29,23 @@ def test_invalid_values(tmp_path: Path) -> None:
     config = load_config(str(path))
     assert config.lives > 0
     assert config.pacgum > 0
+
+def test_unknown_keys(tmp_path: Path) -> None:
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps({"qqq": 123, "lives": 5}))
+    config = load_config(str(path))
+    assert config.lives == 5
+
+def test_malformed_json(tmp_path: Path) -> None:
+    path = tmp_path / "config.json"
+    path.write_text("{ not valid json file!")
+    config = load_config(str(path))
+    assert config.lives == 3
+
+def test_levels_keys(tmp_path: Path) -> None:
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps({"levels": [{"width": 21, "height": 14}]}))
+    config = load_config(str(path))
+    assert len(config.levels) == 1
+    assert config.levels[0].width == 21
+    assert config.levels[0].height == 14
