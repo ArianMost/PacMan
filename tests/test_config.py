@@ -85,3 +85,11 @@ def test_walls_color(tmp_path: Path) -> None:
     )
     config = load_config(str(path))
     assert config.levels[0].walls_color == (0x1E, 0x2A, 0xC9)
+    
+def test_invalid_walls_color(tmp_path: Path) -> None:
+    path = tmp_path / "config.json"
+    path.write_text(
+        json.dumps({"levels": [{"width": 21, "height": 14, "walls_color": "asfgf"}]})
+    )
+    config = load_config(str(path))
+    assert config.levels[0].walls_color is None
