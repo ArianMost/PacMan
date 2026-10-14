@@ -12,6 +12,8 @@ class Maze:
     player_sp: tuple[int, int]
 
     def is_walkable(self, row: int, col: int) -> bool:
+        """Return True if the cell at (row, col)
+        is walkable (not a wall)."""
         if 0 <= row < self.rows and 0 <= col < self.cols:
             return self.grid[row][col] != 15
         return False

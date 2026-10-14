@@ -82,6 +82,7 @@ class GhostState(Enum):
 class Ghost(Entity):
     def __init__(self, col: int, row: int, name: str,
                  color: Tuple[int, int, int]) -> None:
+        """Initialize a ghost entity with its position, name, and color."""
         super().__init__(col=col, row=row)
         self.name: str = name
         self.color: Tuple[int, int, int] = color
@@ -91,8 +92,8 @@ class Ghost(Entity):
         self.frightened_timer: float = 0.0
         self.respawn_timer: float = 0.0
         self.reverse_requested = False
-        self._home_distance_field = None
-        self._last_decided_cell = None
+        self._home_distance_field: dict[Cell, int] | None = None
+        self._last_decided_cell: Cell | None = None
 
     _CHASE_SPEED_MULT: ClassVar[float] = 0.7
     _FRIGHTENED_SPEED_MULT: ClassVar[float] = 0.9
@@ -154,13 +155,15 @@ class Ghost(Entity):
             if random.random() < 0.5:
                 chosen_dir = random.choice(options)
             else:
-                chosen_dir = max(options, key=lambda d: self._squared_distance(d, target))
+                chosen_dir = max(options,
+                                 key=lambda d:
+                                 self._squared_distance(d, target))
         else:
-            chosen_dir = min(options, key=lambda d: self._squared_distance(d, target))
+            chosen_dir = min(options, key=lambda d:
+                             self._squared_distance(d, target))
 
         self.direction = chosen_dir
         self.next_direction = chosen_dir
-
 
     def _decide_if_new_cell(self, maze: Maze, target: Cell) -> None:
         """Only re-decide a direction when we've actually arrived at a new
@@ -181,20 +184,15 @@ class Ghost(Entity):
 
     def _chase_target(self, player_cell: Cell) -> Cell:
         """Compute the CHASE-mode target cell, varied by ghost personality.
-
-        - blinky: targets the player directly (classic aggressive chaser).
-        - pinky: targets 4 cells ahead of the player (ambush).
-        - inky: targets near the player with randomized jitter
-          (unpredictable).
-        - clyde: chases directly when far away, but flees home once close
-          (the classic "shy" behaviour) so it doesn't pile onto the player.
-        - anything else: falls back to direct chase.
         """
         pcol, prow = player_cell
         # if self.name == "pinky":
         #     return pcol + 4, prow - 4
         # if self.name == "inky":
-        #     return pcol + random.choice((-4, 4)), prow + random.choice((-4, 4))
+        #     return (
+        #         pcol + random.choice((-4, 4)),
+        #         prow + random.choice((-4, 4)),
+        #     )
         # if self.name == "clyde":
         #     distance = (self.col - pcol) ** 2 + (self.row - prow) ** 2
         #     if distance <= 64:  # within 8 cells: get shy, retreat home
@@ -203,6 +201,7 @@ class Ghost(Entity):
         return pcol, prow  # blinky and default
 
     def _update_eaten(self, maze: Maze, dt: float) -> None:
+        """Move the ghost back to its home corner, then revive into CHASE."""
         self.respawn_timer = max(0.0, self.respawn_timer - dt)
         home = (self.home_col, self.home_row)
         current_cell = (self.col, self.row)
@@ -216,11 +215,12 @@ class Ghost(Entity):
                 self.state = GhostState.CHASE
             return
 
-        if self._home_distance_field is None:
-            self._home_distance_field = _bfs_distance_field(maze, home)
-
+        distance_field = self._home_distance_field
+        if distance_field is None:
+            distance_field = _bfs_distance_field(maze, home)
+            self._home_distance_field = distance_field
         if current_cell != self._last_decided_cell:
-            direction = _step_toward(maze, current_cell, self._home_distance_field)
+            direction = _step_toward(maze, current_cell, distance_field)
             self.direction = direction
             self.next_direction = direction
             self._last_decided_cell = current_cell
@@ -231,6 +231,8 @@ class Ghost(Entity):
                            dt: float,
                            player_cell: Cell) -> None:
         self.frightened_timer = max(0.0, self.frightened_timer - dt)
+        """Frightened ghosts move semi-randomly, but still
+        try to flee from the player."""
 
         self._decide_if_new_cell(maze, player_cell)
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
@@ -239,6 +241,8 @@ class Ghost(Entity):
             self._last_decided_cell = None
 
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
+        """Chase ghosts move toward their target cell,
+        which is determined by their personality."""
         target = self._chase_target(player_cell)
         self._decide_if_new_cell(maze, target)
         self.update(maze, dt, speed_multiplier=self._CHASE_SPEED_MULT)

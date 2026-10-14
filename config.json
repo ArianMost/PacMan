@@ -13,7 +13,7 @@
             "level_number": 1,
             "width": 15,
             "height": 11,
-            "seed": 101,
+            "seed": 108,
             "level_max_time": 75,
             "map_filename": "inc/maps/maze-1.txt",
             "bonus_fruit_type": "Cherry",
@@ -29,7 +29,7 @@
             "map_filename": "inc/maps/maze-2.txt",
             "bonus_fruit_type": "Strawberry",
             "points_per_bonus_fruit": 300,
-            "walls_color": "#1e2ac9"
+            "walls_color": "#007FFF"
         },
         {
             "level_number": 3,

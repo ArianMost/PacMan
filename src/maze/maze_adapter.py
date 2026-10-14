@@ -1,5 +1,5 @@
 import sys
-from typing import Deque
+from typing import Deque, cast
 from collections import deque
 from src.maze.maze import Maze
 from src.maze.maze_generator import MazeGenerator
@@ -16,22 +16,25 @@ class ExternalGeneratorAdapter:
         seed: int,
         perfect: bool,
     ) -> list[list[int]]:
+        """Generate a maze using the external A-Maze-ing package."""
         generator = ExternalMazeGenerator(
             size=(width, height),
             perfect=perfect,
             seed=seed,
         )
-        return generator.maze
+        return cast(list[list[int]], generator.maze)
 
 
 class MazeAdapter:
     """Adapts whatever generator is configured to the game's needs."""
 
     def __init__(self, generator: MazeGenerator | None = None) -> None:
+        """Initialize the maze adapter with an optional generator."""
         self._generator = generator or ExternalGeneratorAdapter()
 
     def build(self, width: int, height: int, seed: int,
               perfect: bool = False) -> Maze:
+        """Build a maze using the configured generator."""
         try:
             grid = self._generator.generate(width, height, seed, perfect)
             if not grid or not grid[0]:
@@ -54,6 +57,8 @@ class MazeAdapter:
     def _get_ghosts_sp(
         grid: list[list[int]], cols: int, rows: int
     ) -> list[tuple[int, int]]:
+        """Get the spawn points for the four ghosts, which are
+        the nearest open cells to the four corners of the maze."""
         maze_corners = [(1, 1), (cols - 2, 1),
                         (1, rows - 2), (cols - 2, rows - 2)]
         return [
@@ -64,10 +69,11 @@ class MazeAdapter:
     @staticmethod
     def _get_player_sp(grid: list[list[int]], cols: int,
                        rows: int) -> tuple[int, int]:
+        """Get the spawn point for the player, which is the nearest
+        open cell to the center of the maze."""
         player_col, player_row = cols // 2, rows // 2
         return MazeAdapter._find_nearest_open(grid, cols,
                                               rows, player_col, player_row)
-
 
     @staticmethod
     def _find_nearest_open(

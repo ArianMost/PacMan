@@ -29,6 +29,7 @@ class HighscoreStore:
         filename: str,
         entries: list[HighscoreEntry] | None = None
     ) -> None:
+        """Initialize the highscore store."""
         self.filename = filename
         if entries is None:
             self.entries = []
@@ -169,7 +170,8 @@ class HighscoreStore:
         payload = [{"name": e.name, "score": e.score} for e in self.entries]
         try:
             tmp_path = path.with_suffix(path.suffix + ".tmp")
-            tmp_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            tmp_path.write_text(json.dumps(payload, indent=2),
+                                encoding="utf-8")
             tmp_path.replace(path)
         except OSError as exc:
             print(
