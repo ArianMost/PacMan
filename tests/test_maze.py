@@ -26,3 +26,16 @@ def test_player_finds_nearest_open_cell():
     ]
     result = MazeAdapter._get_player_sp(grid, 3, 3)
     assert result == (2, 1)
+    
+def test_ghost_find_open_cells():
+    grid = [
+        [15, 15, 15, 15, 15],
+        [15, 15, 0, 15, 15],
+        [15, 0, 0, 0, 15],
+        [15, 15, 0, 15, 15],
+        [15, 15, 15, 15, 15],
+    ]
+    spawns = MazeAdapter._get_ghosts_sp(grid, 5, 5)
+    assert len(spawns) == 4
+    for col, row in spawns:
+        assert grid[row][col] != 15
