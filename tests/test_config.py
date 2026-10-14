@@ -49,3 +49,31 @@ def test_levels_keys(tmp_path: Path) -> None:
     assert len(config.levels) == 1
     assert config.levels[0].width == 21
     assert config.levels[0].height == 14
+
+def test_level_overrides(tmp_path: Path) -> None:
+    path = tmp_path / "config.json"
+    path.write_text(
+        json.dumps(
+            {
+                "seed": 42,
+                "levels": [
+                    {
+                        "level_number": 1,
+                        "width": 14,
+                        "height": 10,
+                        "seed": 10,
+                        "level_max_time": 65,
+                        "bonus_fruit_type": "Cherry",
+                        "points_per_bonus_fruit": 200,
+                    }
+                ],
+            }
+        )
+    )
+    config = load_config(str(path))
+    level = config.levels[0]
+    assert level.level_number == 1
+    assert level.seed == 10
+    assert level.level_max_time == 65
+    assert level.bonus_fruit_type == "Cherry"
+    assert level.points_per_bonus_fruit == 200
