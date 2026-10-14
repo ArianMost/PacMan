@@ -93,3 +93,11 @@ def test_invalid_walls_color(tmp_path: Path) -> None:
     )
     config = load_config(str(path))
     assert config.levels[0].walls_color is None
+    
+def test_invalid_per_level_seed(tmp_path: Path) -> None:
+    path = tmp_path / "config.json"
+    path.write_text(
+        json.dumps({"levels": [{"width": 21, "height": 14, "seed": "asfdf"}]})
+    )
+    config = load_config(str(path))
+    assert config.levels[0].seed is None
