@@ -115,7 +115,7 @@ class Ghost(Entity):
             return
         self.state = GhostState.FRIGHTENED
         self.frightened_timer = duration
-        self._last_decided_cell = None
+        # self._last_decided_cell = None
 
         if self.direction is not Direction.NONE:
             old_direction = self.direction
@@ -123,14 +123,17 @@ class Ghost(Entity):
             self.row += old_direction.dy
             self.direction = self.direction.opposite()
             self._progress = 1.0 - self._progress
+            self._last_decided_cell = (self.col, self.row)
         else:
             self.next_direction = Direction.NONE
+            self._last_decided_cell = None
 
     def get_eaten(self, respawn_delay: float) -> None:
         """Called when the player catches this ghost while it's frightened."""
         self.state = GhostState.EATEN
         self.respawn_timer = respawn_delay
         self.frightened_timer = 0.0
+        self.snap(self.col, self.row)
         self._last_decided_cell = None
 
     def choose_direction(self, maze: Maze, target: Cell) -> None:
