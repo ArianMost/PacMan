@@ -142,6 +142,10 @@ class Ghost(Entity):
         """
         options = self.available_directions(maze)
         if not options:
+            print(f"{self.name} is trapped at {self.col},"
+                  f"{self.row} with NO open paths!")
+            self.direction = Direction.NONE
+            self.next_direction = Direction.NONE
             return
 
         if len(options) > 1 and self.direction is not Direction.NONE:
@@ -149,6 +153,12 @@ class Ghost(Entity):
             if reverse in options:
                 options.remove(reverse)
 
+        if not options:
+            print(f"{self.name} is trapped at {self.col},"
+                  f"{self.row} with NO open paths!")
+            self.direction = Direction.NONE
+            self.next_direction = Direction.NONE
+            return
         if self.state is GhostState.FRIGHTENED:
             if random.random() < 0.5:
                 chosen_dir = random.choice(options)
@@ -167,7 +177,7 @@ class Ghost(Entity):
         """Only re-decide a direction when we've actually arrived at a new
         cell — not every single frame — mirroring how _update_eaten decides."""
         current_cell = (self.col, self.row)
-        if current_cell != self._last_decided_cell:
+        if current_cell != self._last_decided_cell or self.direction is Direction.NONE:
             self.choose_direction(maze, target)
             self._last_decided_cell = current_cell
 
@@ -180,7 +190,7 @@ class Ghost(Entity):
         tcol, trow = target
         return (col - tcol) ** 2 + (row - trow) ** 2
 
-    def _chase_target(self, player_cell: Cell) -> Cell:
+    def _chase_target(self, maze: Maze, player_cell: Cell) -> Cell:
         """Compute the CHASE-mode target cell, varied by ghost personality.
         """
         pcol, prow = player_cell
@@ -206,7 +216,7 @@ class Ghost(Entity):
         if distance_field is None:
             distance_field = _bfs_distance_field(maze, home)
             self._home_distance_field = distance_field
-        if current_cell != self._last_decided_cell:
+        if current_cell != self._last_decided_cell or self.direction is Direction.NONE:
             direction = _step_toward(maze, current_cell, distance_field)
             self.direction = direction
             self.next_direction = direction
@@ -229,8 +239,21 @@ class Ghost(Entity):
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Chase ghosts move toward their target cell,
         which is determined by their personality."""
-        target = self._chase_target(player_cell)
-        self._decide_if_new_cell(maze, target)
+        target = self._chase_target(maze, player_cell)
+        current_cell = (self.col, self.row)
+        if current_cell != self._last_decided_cell or self.direction is Direction.NONE:
+            distance_field = _bfs_distance_field(maze, target)
+            if current_cell not in distance_field:
+                target = player_cell
+                distance_field = _bfs_distance_field(maze, target)
+            chosen_dir = _step_toward(maze, current_cell, distance_field)
+            if chosen_dir is Direction.NONE:
+                self.choose_direction(maze, target)
+            else:
+                self.direction = chosen_dir
+                self.next_direction = chosen_dir
+            self._last_decided_cell = current_cell
+
         self.update(maze, dt, speed_multiplier=self._CHASE_SPEED_MULT)
 
     def update_ai(self, maze: Maze, dt: float, player_cell: Cell) -> None:

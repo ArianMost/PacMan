@@ -68,7 +68,7 @@ class Entity:
         self._progress = 0.0
 
     def snap(self, col: int, row: int) -> None:
-        """Move the entity immediately to a cell and stop its movement."""
+        """Teleport the entity immediately to a cell and stop its movement."""
         self.col = col
         self.row = row
         self._progress = 0.0
