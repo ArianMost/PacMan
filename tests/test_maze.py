@@ -67,3 +67,12 @@ def test_maze_build_using_seed():
     adapter = MazeAdapter(generator)
     adapter.build(3, 3, 9876)
     assert generator.received_seed == 9876
+
+def test_maze_find_nearest_open():
+    grid = [
+        [15, 15, 15],
+        [15, 0, 15],
+        [15, 15, 15],
+    ]
+    result = MazeAdapter._find_nearest_open(grid, 3, 3, 0, 0)
+    assert result == (1, 1)
