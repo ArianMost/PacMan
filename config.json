@@ -15,7 +15,6 @@
             "height": 11,
             "seed": 108,
             "level_max_time": 75,
-            "map_filename": "inc/maps/maze-1.txt",
             "bonus_fruit_type": "Cherry",
             "points_per_bonus_fruit": 200,
             "walls_color": "#1e2ac9"
@@ -26,7 +25,6 @@
             "height": 11,
             "seed": 202,
             "level_max_time": 90,
-            "map_filename": "inc/maps/maze-2.txt",
             "bonus_fruit_type": "Strawberry",
             "points_per_bonus_fruit": 300,
             "walls_color": "#007FFF"
@@ -37,7 +35,6 @@
             "height": 13,
             "seed": 303,
             "level_max_time": 105,
-            "map_filename": "inc/maps/maze-3.txt",
             "bonus_fruit_type": "Orange",
             "points_per_bonus_fruit": 500,
             "walls_color": "#d62828"

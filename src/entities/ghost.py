@@ -111,7 +111,6 @@ class Ghost(Entity):
             return
         self.state = GhostState.FRIGHTENED
         self.frightened_timer = duration
-        # self._last_decided_cell = None
 
         if self.direction is not Direction.NONE:
             old_direction = self.direction
@@ -195,7 +194,7 @@ class Ghost(Entity):
         """Compute the CHASE-mode target cell, varied by ghost personality.
         """
         pcol, prow = player_cell
-        return pcol, prow
+        return pcol, prow 
 
     def _update_eaten(self, maze: Maze, dt: float) -> None:
         """Move the ghost back to its home corner, then revive into CHASE."""
@@ -236,7 +235,6 @@ class Ghost(Entity):
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
             self.state = GhostState.CHASE
-            # self._last_decided_cell = None
 
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Chase ghosts move toward their target cell,

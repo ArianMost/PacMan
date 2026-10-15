@@ -50,7 +50,7 @@ class HighscoreStore:
     @staticmethod
     def _validate_score(score: Any) -> int | None:
         """Coerce and validate a score, or return None if invalid."""
-        if isinstance(score, bool):  # bool is an int subclass -- reject it
+        if isinstance(score, bool):
             return None
         try:
             value = int(score)

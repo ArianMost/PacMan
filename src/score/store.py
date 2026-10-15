@@ -90,6 +90,6 @@ class ScoringSystem:
         elif 9 <= level <= 10:
             points = 2000      # Galaxian Flagship
         else:
-            points = 0         # Fallback if level is somehow out of bounds
+            points = 0
         player.add_score(points)
         return points
