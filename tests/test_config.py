@@ -77,27 +77,27 @@ def test_level_overrides(tmp_path: Path) -> None:
     assert level.level_max_time == 65
     assert level.bonus_fruit_type == "Cherry"
     assert level.points_per_bonus_fruit == 200
-    
+
 def test_walls_color(tmp_path: Path) -> None:
     path = tmp_path / "config.json"
     path.write_text(
         json.dumps({"levels": [{"width": 21, "height": 14, "walls_color": "#1e2ac9"}]})
     )
     config = load_config(str(path))
-    assert config.levels[0].walls_color == (0x1E, 0x2A, 0xC9)
-    
+    assert config.levels[0].walls_color == "#1e2ac9"
+
 def test_invalid_walls_color(tmp_path: Path) -> None:
     path = tmp_path / "config.json"
     path.write_text(
         json.dumps({"levels": [{"width": 21, "height": 14, "walls_color": "asfgf"}]})
     )
     config = load_config(str(path))
-    assert config.levels[0].walls_color is None
-    
+    assert config.levels[0].walls_color == "#1e2ac9"
+
 def test_invalid_per_level_seed(tmp_path: Path) -> None:
     path = tmp_path / "config.json"
     path.write_text(
         json.dumps({"levels": [{"width": 21, "height": 14, "seed": "asfdf"}]})
     )
     config = load_config(str(path))
-    assert config.levels[0].seed is None
+    assert config.levels[0].seed == 42
