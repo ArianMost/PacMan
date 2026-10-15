@@ -66,10 +66,11 @@ def _step_toward(maze: Maze, start: Cell, dist: dict[Cell, int]) -> Direction:
     ]
 
     # 70% chance to choose a best direction,
-    if random.random() < 0.7:
-        return random.choice(best)
+    # if random.random() < 0.7:
+    #     return random.choice(best)
 
-    return random.choice([d for d, _ in options])
+    # return random.choice([d for d, _ in options])
+    return random.choice(best)
 
 
 class GhostState(Enum):
@@ -115,7 +116,7 @@ class Ghost(Entity):
             return
         self.state = GhostState.FRIGHTENED
         self.frightened_timer = duration
-        self._last_decided_cell = None
+        # self._last_decided_cell = None
 
         if self.direction is not Direction.NONE:
             old_direction = self.direction
@@ -123,14 +124,17 @@ class Ghost(Entity):
             self.row += old_direction.dy
             self.direction = self.direction.opposite()
             self._progress = 1.0 - self._progress
+            self._last_decided_cell = (self.col, self.row)
         else:
             self.next_direction = Direction.NONE
+            self._last_decided_cell = None
 
     def get_eaten(self, respawn_delay: float) -> None:
         """Called when the player catches this ghost while it's frightened."""
         self.state = GhostState.EATEN
         self.respawn_timer = respawn_delay
         self.frightened_timer = 0.0
+        self.snap(self.col, self.row)
         self._last_decided_cell = None
 
     def choose_direction(self, maze: Maze, target: Cell) -> None:
@@ -207,6 +211,7 @@ class Ghost(Entity):
         current_cell = (self.col, self.row)
 
         if current_cell == home:
+            self.snap(self.col, self.row)
             self.direction = Direction.NONE
             self.next_direction = Direction.NONE
             self._home_distance_field = None
@@ -238,7 +243,7 @@ class Ghost(Entity):
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
             self.state = GhostState.CHASE
-            self._last_decided_cell = None
+            # self._last_decided_cell = None
 
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Chase ghosts move toward their target cell,
