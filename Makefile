@@ -43,12 +43,12 @@ test: install
 	uv run pytest tests/
 
 lint: install
-	uv run flake8 .
+	uv run flake8 --exclude=venv,.venv .
 	uv run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports \
 		--disallow-untyped-defs --check-untyped-defs
 
 lint-strict: install
-	uv run flake8 .
+	uv run flake8 --exclude=venv,.venv .
 	uv run mypy . --strict
 
 clean:
