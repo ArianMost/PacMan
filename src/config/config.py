@@ -46,7 +46,6 @@ class LevelConfig:
     height: int = 10
     seed: int = 0
     level_max_time: int = 90
-    map_filename: str = ""
     bonus_fruit_type: str = "cherry"
     points_per_bonus_fruit: int = 100
     walls_color: str = "#1e2ac9"
