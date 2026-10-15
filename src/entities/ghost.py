@@ -65,11 +65,6 @@ def _step_toward(maze: Maze, start: Cell, dist: dict[Cell, int]) -> Direction:
         if distance == best_distance
     ]
 
-    # 70% chance to choose a best direction,
-    # if random.random() < 0.7:
-    #     return random.choice(best)
-
-    # return random.choice([d for d, _ in options])
     return random.choice(best)
 
 
@@ -116,7 +111,6 @@ class Ghost(Entity):
             return
         self.state = GhostState.FRIGHTENED
         self.frightened_timer = duration
-        # self._last_decided_cell = None
 
         if self.direction is not Direction.NONE:
             old_direction = self.direction
@@ -190,19 +184,7 @@ class Ghost(Entity):
         """Compute the CHASE-mode target cell, varied by ghost personality.
         """
         pcol, prow = player_cell
-        # if self.name == "pinky":
-        #     return pcol + 4, prow - 4
-        # if self.name == "inky":
-        #     return (
-        #         pcol + random.choice((-4, 4)),
-        #         prow + random.choice((-4, 4)),
-        #     )
-        # if self.name == "clyde":
-        #     distance = (self.col - pcol) ** 2 + (self.row - prow) ** 2
-        #     if distance <= 64:  # within 8 cells: get shy, retreat home
-        #         return self.home_col, self.home_row
-        #     return pcol, prow
-        return pcol, prow  # blinky and default
+        return pcol, prow 
 
     def _update_eaten(self, maze: Maze, dt: float) -> None:
         """Move the ghost back to its home corner, then revive into CHASE."""
@@ -243,7 +225,6 @@ class Ghost(Entity):
         self.update(maze, dt, speed_multiplier=self._FRIGHTENED_SPEED_MULT)
         if self.frightened_timer <= 0.0:
             self.state = GhostState.CHASE
-            # self._last_decided_cell = None
 
     def _update_chase(self, maze: Maze, dt: float, player_cell: Cell) -> None:
         """Chase ghosts move toward their target cell,

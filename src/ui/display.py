@@ -222,7 +222,7 @@ class Display:
 
     def _draw_pause_menu(self) -> None:
         """Draw the frozen game with a translucent pause menu on top."""
-        self._draw_game()  # keep the last frame visible behind the menu
+        self._draw_game()
         overlay = pygame.Surface(self.surface.get_size(), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         self.surface.blit(overlay, (0, 0))
@@ -330,7 +330,7 @@ class Display:
 
     def _draw_waiting_to_start(self) -> None:
         """Draw the frozen game with a prompt to start."""
-        self._draw_game()  # Draw the maze and entities in the background
+        self._draw_game()
 
         # Add a dark translucent overlay so text is easier to read
         overlay = pygame.Surface(self.surface.get_size(), pygame.SRCALPHA)
@@ -346,8 +346,6 @@ class Display:
         self.update_window_for_level()
         if self.state.phase is ScreenTypes.MENU:
             self._draw_menu()
-        # elif self.state.phase is ScreenTypes.WAITING_TO_START:
-        #     self._draw_waiting_to_start()
         elif self.state.phase is ScreenTypes.INSTRUCTIONS:
             self._draw_instructions()
         elif self.state.phase is ScreenTypes.HIGH_SCORES:
@@ -427,7 +425,6 @@ class Display:
         cols = maze.cols if hasattr(maze, "cols") else len(grid[0])
 
         current_width = self.surface.get_width()
-        # current_height = self.surface.get_height()
         hud_space = 80
         available_width = WINDOW_WIDTH - 40
         available_height = WINDOW_HEIGHT - hud_space - 20
@@ -439,7 +436,6 @@ class Display:
         maze_pixel_width = cols * cell_size
         maze_pixel_height = rows * cell_size
         offset_x = max(30, (current_width - maze_pixel_width) // 2)
-        # min_top_margin = hud_space + 10
         calculated_offset_y = hud_space + (available_height -
                                            maze_pixel_height) // 2
         offset_y = max(hud_space + 10, calculated_offset_y) + 15

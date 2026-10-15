@@ -173,14 +173,12 @@ class GameState:
         player_cell = (self.player.col, self.player.row)
         if self.pellets.eat_pacgum(player_cell):
             self.scoring.award_pacgum(self.player)
-            # === PLAY PELLET EAT SOUND HERE ===
             if hasattr(self, "pacgum_sound") and self.pacgum_sound:
                 self.pacgum_sound.play()
         elif self.pellets.eat_super_pacgum(player_cell):
             self.scoring.award_super_pacgum(self.player)
             for ghost in self.ghosts:
                 ghost.frighten(duration=FRIGHTENED_DURATION)
-            # === PLAY SUPER PAC-GUM SOUND ===
             if self.super_pacgum_sound is not None:
                 self.super_pacgum_sound.play()
         if self.pellets.remaining() == 0:
@@ -215,8 +213,6 @@ class GameState:
                 display_level = self.current_level_index + 1
                 self.scoring.award_fruit(self.player, display_level)
                 self.fruit_cell = None
-
-                # === PLAY FRUIT SOUND HERE ===
                 if self.fruit_sound is not None:
                     self.fruit_sound.play()
 
@@ -237,7 +233,6 @@ class GameState:
                         if not self.is_dying:
                             self.is_dying = True
                             self.death_timer = 1.2
-                            # === PLAY DEATH SOUND HERE ===
                             if self.death_sound is not None:
                                 self.death_sound.set_volume(1.0)
                                 self.death_sound.play()
@@ -332,7 +327,6 @@ class GameState:
         # Reset fruit state for the new level
         self.fruit_cell = None
         self.fruit_spawned_this_level = False
-        # self.level_protection_timer = 0.5
 
     def advance_level(self) -> None:
         """Advance to the next level, or end

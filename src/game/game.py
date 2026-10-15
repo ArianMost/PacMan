@@ -48,7 +48,6 @@ class Game:
         # The loop runs as long as the state is not phase.QUIT
         while self.running and self.state.phase is not ScreenTypes.QUIT:
             dt = clock.tick(FPS) / 1000.0
-            # === PLAY START/MENU MUSIC HERE (Runs every frame) ===
             should_play_music = (
                 self.state.phase == ScreenTypes.MENU
                 or (
@@ -233,7 +232,6 @@ class Game:
             event.key in (pygame.K_RETURN, pygame.K_SPACE)
             or event.key in DIRECTION_KEY
         ):
-            # === STOP THE INTRO MUSIC HERE ===
             pygame.mixer.music.stop()
             # Transition from waiting to active gameplay
             self.state.phase = ScreenTypes.PLAYING

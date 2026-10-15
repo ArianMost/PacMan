@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from src.game.game import main  # noqa: E402
+from src.game.game import main
 
 
 def _usage_error(message: str) -> int:
