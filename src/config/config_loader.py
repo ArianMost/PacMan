@@ -226,10 +226,6 @@ def _validate_levels(raw_levels: Any) -> list[LevelConfig]:
                     data.get("level_max_time"), f"{prefix}.level_max_time"
                 )
                 or DEFAULT_CONFIG["level_max_time"],
-                map_filename=_validate_optional_str(
-                    data.get("map_filename"), f"{prefix}.map_filename"
-                )
-                or "",
                 bonus_fruit_type=str(data.get("bonus_fruit_type", "")).strip(),
                 points_per_bonus_fruit=_validate_nonnegative_int(
                     data.get("points_per_bonus_fruit"),
