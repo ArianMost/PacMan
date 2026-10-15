@@ -50,3 +50,20 @@ def test_maze_build_exits(capsys):
         adapter.build(5, 5, 123)
     assert exc_info.value.code == 1
     assert "empty maze grid" in capsys.readouterr().err
+
+def test_maze_build_using_seed():
+    class FakeGenerator:
+        def __init__(self):
+            self.received_seed = None
+
+        def generate(self, width, height, seed, perfect):
+            self.received_seed = seed
+            return [
+                [15, 15, 15],
+                [15, 0, 15],
+                [15, 15, 15],
+            ]
+    generator = FakeGenerator()
+    adapter = MazeAdapter(generator)
+    adapter.build(3, 3, 9876)
+    assert generator.received_seed == 9876
