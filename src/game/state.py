@@ -32,7 +32,7 @@ class ScreenTypes(Enum):
 
 
 class GameState:
-    HIT_RADIUS = 0.6
+    HIT_RADIUS = 0.4
 
     def __init__(self, config: Config) -> None:
         """Initialize the game state with the given configuration."""
