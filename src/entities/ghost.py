@@ -4,8 +4,8 @@ from typing import Tuple, Any
 from typing import ClassVar
 from src.entities.entity import _CARDINALS, Entity
 from src.entities.entity import Direction
+from src.maze.maze import Maze
 import random
-from src.maze.maze_adapter import Maze
 
 GHOST_NAMES_COLORS = [
     ("blinky", "#9B59B6"),
@@ -177,7 +177,10 @@ class Ghost(Entity):
         """Only re-decide a direction when we've actually arrived at a new
         cell — not every single frame — mirroring how _update_eaten decides."""
         current_cell = (self.col, self.row)
-        if current_cell != self._last_decided_cell or self.direction is Direction.NONE:
+        if (
+            current_cell != self._last_decided_cell
+            or self.direction is Direction.NONE
+        ):
             self.choose_direction(maze, target)
             self._last_decided_cell = current_cell
 
@@ -194,7 +197,7 @@ class Ghost(Entity):
         """Compute the CHASE-mode target cell, varied by ghost personality.
         """
         pcol, prow = player_cell
-        return pcol, prow 
+        return pcol, prow
 
     def _update_eaten(self, maze: Maze, dt: float) -> None:
         """Move the ghost back to its home corner, then revive into CHASE."""
@@ -216,7 +219,10 @@ class Ghost(Entity):
         if distance_field is None:
             distance_field = _bfs_distance_field(maze, home)
             self._home_distance_field = distance_field
-        if current_cell != self._last_decided_cell or self.direction is Direction.NONE:
+        if (
+            current_cell != self._last_decided_cell
+            or self.direction is Direction.NONE
+        ):
             direction = _step_toward(maze, current_cell, distance_field)
             self.direction = direction
             self.next_direction = direction
@@ -241,7 +247,10 @@ class Ghost(Entity):
         which is determined by their personality."""
         target = self._chase_target(maze, player_cell)
         current_cell = (self.col, self.row)
-        if current_cell != self._last_decided_cell or self.direction is Direction.NONE:
+        if (
+            current_cell != self._last_decided_cell
+            or self.direction is Direction.NONE
+        ):
             distance_field = _bfs_distance_field(maze, target)
             if current_cell not in distance_field:
                 target = player_cell
