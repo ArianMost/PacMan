@@ -14,24 +14,24 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "cell_size": 24,
     "levels": [
         {
-        "level_number": 1,
-        "width": 19,
-        "height": 13,
-        "seed": 505,
-        "level_max_time": 130,
-        "bonus_fruit_type": "Banana",
-        "points_per_bonus_fruit": 700,
-        "walls_color": "#f4a261"
+            "level_number": 1,
+            "width": 19,
+            "height": 13,
+            "seed": 505,
+            "level_max_time": 130,
+            "bonus_fruit_type": "Banana",
+            "points_per_bonus_fruit": 700,
+            "walls_color": "#f4a261"
         },
         {
-        "level_number": 2,
-        "width": 19,
-        "height": 15,
-        "seed": 606,
-        "level_max_time": 145,
-        "bonus_fruit_type": "Melon",
-        "points_per_bonus_fruit": 1000,
-        "walls_color": "#2a9d8f"
+            "level_number": 2,
+            "width": 19,
+            "height": 15,
+            "seed": 606,
+            "level_max_time": 145,
+            "bonus_fruit_type": "Melon",
+            "points_per_bonus_fruit": 1000,
+            "walls_color": "#2a9d8f"
         },
     ]
 }
@@ -49,6 +49,7 @@ class LevelConfig:
     bonus_fruit_type: str = "cherry"
     points_per_bonus_fruit: int = 100
     walls_color: str = "#1e2ac9"
+
 
 @dataclass
 class Config:
