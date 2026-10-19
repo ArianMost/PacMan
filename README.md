@@ -83,6 +83,7 @@ make build
 ```
 
 Packages the game into a standalone executable via PyInstaller and produces `dist/pacman-linux.zip`.
+The build is implemented in build.sh and pacman.spec. A ready-made build is published on itch.io and can be downloaded here: https://arianmost.itch.io/pac-man-42
 
 ---
 
@@ -252,7 +253,7 @@ This modular decomposition supports reuse, easier testing, and clearer maintenan
 Tools Used:
 - ChatGPT (GPT-4)
 
-AI was used to generate images and structuring this README.  
+AI was used to generate images and structuring this README and the documentation.
 
 ## License
 
