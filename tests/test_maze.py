@@ -1,9 +1,17 @@
 import pytest
 from src.maze.maze_adapter import MazeAdapter
+from src.maze.maze_generator import MazeGenerator
 
-def test_external_generator_adapter():
+
+def test_external_generator_adapter() -> None:
     class FakeGenerator:
-        def generate(self, width, height, seed, perfect):
+        def generate(
+                self,
+                width: int,
+                height: int,
+                seed: int,
+                perfect: bool
+        ) -> list[list[int]]:
             return [
                 [15, 15, 15, 15, 15],
                 [15, 0, 15, 0, 15],
@@ -18,7 +26,8 @@ def test_external_generator_adapter():
     assert maze.rows == 5
     assert maze.player_sp == (2, 2)
 
-def test_player_finds_nearest_open_cell():
+
+def test_player_finds_nearest_open_cell() -> None:
     grid = [
         [15, 15, 15],
         [15, 15, 0],
@@ -27,7 +36,8 @@ def test_player_finds_nearest_open_cell():
     result = MazeAdapter._get_player_sp(grid, 3, 3)
     assert result == (2, 1)
 
-def test_ghost_find_open_cells():
+
+def test_ghost_find_open_cells() -> None:
     grid = [
         [15, 15, 15, 15, 15],
         [15, 15, 0, 15, 15],
@@ -40,10 +50,17 @@ def test_ghost_find_open_cells():
     for col, row in spawns:
         assert grid[row][col] != 15
 
-def test_maze_build_exits(capsys):
-    class FakeGenerator:
-        def generate(self, width, height, seed, perfect):
-            return None
+
+def test_maze_build_exits(capsys: pytest.CaptureFixture[str]) -> None:
+    class FakeGenerator(MazeGenerator):
+        def generate(
+                self,
+                width: int,
+                height: int,
+                seed: int,
+                perfect: bool
+        ) -> list[list[int]]:
+            return [[]]
 
     adapter = MazeAdapter(FakeGenerator())
     with pytest.raises(SystemExit) as exc_info:
@@ -51,12 +68,19 @@ def test_maze_build_exits(capsys):
     assert exc_info.value.code == 1
     assert "empty maze grid" in capsys.readouterr().err
 
-def test_maze_build_using_seed():
-    class FakeGenerator:
-        def __init__(self):
-            self.received_seed = None
 
-        def generate(self, width, height, seed, perfect):
+def test_maze_build_using_seed() -> None:
+    class FakeGenerator:
+        def __init__(self) -> None:
+            self.received_seed = 0
+
+        def generate(
+                self,
+                width: int,
+                height: int,
+                seed: int,
+                perfect: bool
+        ) -> list[list[int]]:
             self.received_seed = seed
             return [
                 [15, 15, 15],
@@ -68,7 +92,8 @@ def test_maze_build_using_seed():
     adapter.build(3, 3, 9876)
     assert generator.received_seed == 9876
 
-def test_maze_find_nearest_open():
+
+def test_maze_find_nearest_open() -> None:
     grid = [
         [15, 15, 15],
         [15, 0, 15],
