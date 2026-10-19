@@ -5,7 +5,7 @@ class Player(Entity):
     def __init__(self, lives: int, score: int = 0) -> None:
         """Initialize a player entity with
         the given number of lives and score."""
-        super().__init__(col=0, row=0, speed_cells_per_sec = 6.0)
+        super().__init__(col=0, row=0, speed_cells_per_sec=6.0)
         self.lives = lives
         self.score = score
 
