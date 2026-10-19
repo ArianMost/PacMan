@@ -37,7 +37,7 @@ debug: install
 	uv run -m pdb pac-man.py $(CONFIG)
 
 build:
-	./build.sh
+	bash ./build.sh
 
 test: install
 	uv run pytest tests/
